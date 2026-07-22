@@ -273,6 +273,13 @@ textarea{resize:vertical;min-height:80px}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
       Nova cobrança
     </div>
+
+    <div style="padding:14px 12px 6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:500">Plataformas</div>
+    <div class="nav-item nav-gc" onclick="showPage('groundcontrol')" style="color:#a78bfa;position:relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+      Ground Control
+      <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#a78bfa22;border:1px solid #a78bfa44;border-radius:4px;font-size:9px;padding:1px 5px;color:#a78bfa;font-weight:600">NEW</span>
+    </div>
     <div class="sidebar-footer">
       <div class="user-card">
         <div class="user-avatar" id="sidebar-avatar">L</div>
@@ -399,6 +406,92 @@ textarea{resize:vertical;min-height:80px}
             <thead><tr><th>Cliente / Job</th><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
             <tbody id="tbody-cobrancas"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- GROUND CONTROL -->
+      <div class="page" id="page-groundcontrol">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
+          <div style="width:42px;height:42px;border-radius:12px;background:#a78bfa22;border:1px solid #a78bfa44;display:flex;align-items:center;justify-content:center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          </div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700">Ground Control</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:2px">Alertas de conteúdo via WhatsApp — integrado ao Notion</div>
+          </div>
+        </div>
+
+        <!-- STATUS CARDS -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
+            <div style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Status</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:8px;height:8px;border-radius:50%;background:#00c97a;box-shadow:0 0 6px #00c97a"></div>
+              <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:600;color:#00c97a">Ativo</span>
+            </div>
+            <div style="font-size:11px;color:var(--muted2);margin-top:6px">Disparos às 9h diariamente</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
+            <div style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Fonte de dados</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/><path d="M4 14h16"/><path d="M9 4v16"/></svg>
+              <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:600">Notion</span>
+            </div>
+            <div style="font-size:11px;color:var(--muted2);margin-top:6px">Ground Control — Aftermoon</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
+            <div style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Canal</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:600;color:#25D366">WhatsApp</span>
+            </div>
+            <div style="font-size:11px;color:var(--muted2);margin-top:6px">afternoonagency</div>
+          </div>
+        </div>
+
+        <!-- COMO FUNCIONA -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:16px">Como funciona</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:flex-start;gap:14px">
+              <div style="width:28px;height:28px;border-radius:8px;background:#a78bfa22;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#a78bfa;font-family:'Syne',sans-serif">1</div>
+              <div><div style="font-size:13px;font-weight:500;margin-bottom:2px">Time cadastra o conteúdo no Notion</div><div style="font-size:12px;color:var(--muted2)">Preenche: Cliente, Data, Tipo (Stories/Feed/Reels), Tema e Instrução</div></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:14px">
+              <div style="width:28px;height:28px;border-radius:8px;background:#a78bfa22;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#a78bfa;font-family:'Syne',sans-serif">2</div>
+              <div><div style="font-size:13px;font-weight:500;margin-bottom:2px">Todo dia às 9h o sistema verifica o Notion</div><div style="font-size:12px;color:var(--muted2)">Busca todos os conteúdos com a data de hoje e status diferente de "Enviado"</div></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:14px">
+              <div style="width:28px;height:28px;border-radius:8px;background:#a78bfa22;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#a78bfa;font-family:'Syne',sans-serif">3</div>
+              <div><div style="font-size:13px;font-weight:500;margin-bottom:2px">Mensagem personalizada enviada ao cliente</div><div style="font-size:12px;color:var(--muted2)">O sistema busca o telefone no Orbit e dispara via WhatsApp automaticamente</div></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:14px">
+              <div style="width:28px;height:28px;border-radius:8px;background:#00c97a22;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#00c97a;font-family:'Syne',sans-serif">✓</div>
+              <div><div style="font-size:13px;font-weight:500;margin-bottom:2px">Status atualizado automaticamente no Notion</div><div style="font-size:12px;color:var(--muted2)">A linha muda para "Enviado" para evitar duplicações</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EXEMPLO DE MENSAGEM -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:14px">Exemplo de mensagem enviada</div>
+          <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:16px;font-size:13px;line-height:1.8;border-left:3px solid #25D366;white-space:pre-wrap;color:var(--text)">Bom dia, Dr. Heres! 🎥
+
+Hoje é dia de <strong>Stories</strong>: "3 hábitos de sono que mudam seu humor" — só você falando pra câmera, ~30s.
+
+Qualquer dúvida, me chama! 🚀</div>
+        </div>
+
+        <!-- LINK NOTION -->
+        <div style="background:#a78bfa0a;border:1px solid #a78bfa22;border-radius:var(--radius);padding:18px 20px;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:13px;font-weight:500;margin-bottom:4px">Editar calendário de conteúdo</div>
+            <div style="font-size:12px;color:var(--muted2)">Abre a tabela do Notion onde o time cadastra os conteúdos</div>
+          </div>
+          <a href="https://app.notion.com/p/6e16239725d64cda85cfc23cdcb37595" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:#a78bfa;color:#000;border-radius:var(--radius-sm);font-size:13px;font-weight:600;text-decoration:none;font-family:'Syne',sans-serif;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Abrir no Notion
+          </a>
         </div>
       </div>
 
@@ -615,7 +708,7 @@ db.auth.getSession().then(({ data }) => {
 });
 
 // NAVEGAÇÃO
-const TITLES = {dashboard:'Painel',clientes:'Clientes',perfil:'',cobrancas:'Cobranças',nova:'Nova cobrança'};
+const TITLES = {dashboard:'Painel',clientes:'Clientes',perfil:'',cobrancas:'Cobranças',nova:'Nova cobrança',groundcontrol:'Ground Control'};
 window.showPage = function(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -624,7 +717,8 @@ window.showPage = function(id) {
   document.getElementById('topbar-back').style.display = id==='perfil' ? 'flex' : 'none';
   document.querySelectorAll('.nav-item').forEach(n=>{
     const t=n.textContent.trim().toLowerCase();
-    if((id==='dashboard'&&t==='painel')||(id==='clientes'&&t==='clientes')||(id==='cobrancas'&&t==='cobranças')||(id==='nova'&&t.includes('nova'))) n.classList.add('active');
+    if((id==='dashboard'&&t==='painel')||(id==='clientes'&&t==='clientes')||(id==='cobrancas'&&t==='cobranças')||(id==='nova'&&t.includes('nova'))||(id==='groundcontrol'&&t.includes('ground'))) n.classList.add('active');
+    if(id==='groundcontrol'&&t.includes('ground')) { n.style.color='#a78bfa'; n.style.background='#a78bfa15'; }
   });
   if(id==='dashboard') carregarDashboard();
   if(id==='clientes') carregarClientes();
