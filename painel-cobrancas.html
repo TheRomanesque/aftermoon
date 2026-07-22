@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aftermoon Orbit — ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0b0d;--surface:#111316;--surface2:#161a1f;--border:#1e2328;--border2:#252b33;
+  --text:#e2e8f0;--muted:#4a5568;--muted2:#718096;
+  --accent:#00c97a;--accent-dim:#00c97a12;--accent-glow:#00c97a30;
+  --orange:#f97316;--orange-dim:#f9731612;--red:#ef4444;--red-dim:#ef444412;
+  --blue:#3b82f6;--blue-dim:#3b82f612;--yellow:#eab308;--yellow-dim:#eab30812;
+  --radius:12px;--radius-sm:8px;--sidebar:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.login-card{width:380px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;text-align:center}
+.login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:28px}
+.login-icon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#00a362);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#000}
+.login-brand{font-family:'Syne',sans-serif;font-size:18px;font-weight:700}
+.login-sub{font-size:12px;color:var(--muted2);margin-bottom:28px}
+.login-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:6px}
+.login-desc{font-size:13px;color:var(--muted2);margin-bottom:28px}
+.login-field{margin-bottom:14px;text-align:left}
+.login-field label{display:block;font-size:11px;color:var(--muted2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.login-field input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 14px;font-size:13px;color:var(--text);font-family:'Inter',sans-serif;outline:none;transition:border .15s}
+.login-field input:focus{border-color:var(--accent)}
+.login-error{background:var(--red-dim);border:1px solid var(--red);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:14px;display:none;text-align:left}
+.login-error.show{display:block}
+
+/* LAYOUT */
+.app{display:none;min-height:100vh}
+.app.show{display:flex}
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:10}
+.sidebar-logo{padding:20px 20px 18px;border-bottom:1px solid var(--border)}
+.logo-mark{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.logo-icon{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#00a362);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#000;font-family:'Syne',sans-serif}
+.logo-name{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text)}
+.logo-sub{font-size:10px;color:var(--muted2);letter-spacing:.06em;text-transform:uppercase}
+.sidebar-section{padding:14px 12px 6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:500}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 8px;font-size:13px;color:var(--muted2);cursor:pointer;border-radius:var(--radius-sm);transition:all .15s}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--accent);background:var(--accent-dim)}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.7}
+.nav-item.active svg{opacity:1}
+.sidebar-footer{margin-top:auto;padding:14px 12px;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--radius-sm);cursor:pointer;transition:background .15s}
+.user-card:hover{background:var(--surface2)}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#00a362);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;font-family:'Syne',sans-serif}
+.user-name{font-size:13px;font-weight:500}
+.user-role{font-size:11px;color:var(--muted2)}
+.logout-btn{display:flex;align-items:center;gap:6px;margin-top:6px;padding:7px 8px;border-radius:var(--radius-sm);font-size:12px;color:var(--muted2);cursor:pointer;transition:all .15s}
+.logout-btn:hover{color:var(--red);background:var(--red-dim)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar);flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:58px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:5}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+.topbar-back{display:flex;align-items:center;gap:6px;color:var(--muted2);cursor:pointer;font-size:13px;transition:color .15s;padding:6px 10px;border-radius:6px}
+.topbar-back:hover{color:var(--accent);background:var(--accent-dim)}
+.content{padding:24px 28px;flex:1}
+.page{display:none;animation:fadeIn .2s ease}.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;transition:border-color .2s}
+.stat-card:hover{border-color:var(--border2)}
+.stat-label{font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.stat-value{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;margin-bottom:4px}
+.stat-value.green{color:var(--accent)}.stat-value.orange{color:var(--orange)}.stat-value.yellow{color:var(--yellow)}
+.stat-change{font-size:11px;color:var(--muted2)}
+
+/* SECTION GRID */
+.section-grid{display:grid;grid-template-columns:1fr 320px;gap:16px;margin-bottom:24px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:600}
+.seg-btn{padding:5px 10px;font-size:11px;border-radius:5px;cursor:pointer;font-family:'Inter',sans-serif;border:1px solid var(--border2);background:transparent;color:var(--muted2);transition:all .15s}
+.seg-btn.active,.seg-btn:hover{background:var(--surface2);color:var(--text)}
+
+/* DONUT */
+.donut-wrap{display:flex;flex-direction:column;align-items:center;padding:4px 0 12px}
+.legend-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
+.legend-row:last-child{border-bottom:none}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.legend-label{font-size:12px;color:var(--muted2);flex:1;margin-left:8px}
+.legend-val{font-size:12px;font-weight:500}
+.legend-pct{font-size:11px;color:var(--muted2);margin-left:6px}
+
+/* TABLE */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:11px 16px;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:#ffffff03}
+td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#ffffff03}
+
+/* AVATARS */
+.avatar{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:'Syne',sans-serif}
+.avatar-lg{width:52px;height:52px;border-radius:14px;font-size:18px}
+.flex{display:flex;align-items:center;gap:10px}
+.name{font-weight:500;font-size:13px}.sub{font-size:11px;color:var(--muted2);margin-top:1px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge-pending{background:var(--yellow-dim);color:var(--yellow)}
+.badge-sent{background:var(--accent-dim);color:var(--accent)}
+.badge-overdue{background:var(--red-dim);color:var(--red)}
+.badge-today{background:var(--orange-dim);color:var(--orange)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;border-radius:var(--radius-sm);cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;transition:all .15s;border:none;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{opacity:.85}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)}.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-ghost{background:transparent;border:1px solid transparent;color:var(--muted2)}.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.btn-danger{background:transparent;border:1px solid var(--border2);color:var(--red)}.btn-danger:hover{border-color:var(--red);background:var(--red-dim)}
+.btn-whatsapp{background:#25D36615;border:1px solid #25D36630;color:#25D366}.btn-whatsapp:hover{background:#25D36625}
+.btn-drive{background:#1a73e815;border:1px solid #1a73e830;color:#4285f4}.btn-drive:hover{background:#1a73e825}
+.btn-lg{padding:9px 20px;font-size:13px}
+.btn-group{display:flex;gap:5px}
+.btn svg{width:13px;height:13px}
+
+/* FORMS */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px}
+.form-section{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.form-section::after{content:'';flex:1;height:1px;background:var(--border)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;color:var(--muted2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--text);font-family:'Inter',sans-serif;outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:#0a0b0d}
+select option{background:var(--surface)}
+textarea{resize:vertical;min-height:80px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+.divider{border:none;border-top:1px solid var(--border);margin:18px 0}
+.empty{text-align:center;padding:52px;color:var(--muted2);font-size:13px}
+
+/* PARCELA */
+.parcela-row{display:grid;grid-template-columns:32px 1fr 1fr;gap:10px;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.parcela-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.parcela-num{width:32px;height:32px;border-radius:8px;background:var(--accent-dim);border:1px solid var(--accent-glow);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);font-family:'Syne',sans-serif;flex-shrink:0}
+
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--border);margin-top:4px}
+.toggle-info{flex:1}
+.toggle-label{font-size:13px;font-weight:500;margin-bottom:2px}
+.toggle-desc{font-size:11px;color:var(--muted2)}
+.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0;margin-left:16px}
+.toggle-switch input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:var(--border2);border-radius:12px;cursor:pointer;transition:background .2s}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;pointer-events:none}
+.toggle-switch input:checked ~ .toggle-track{background:var(--accent)}
+.toggle-switch input:checked ~ .toggle-thumb{transform:translateX(20px)}
+
+/* PERFIL CLIENTE */
+.profile-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px}
+.profile-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.profile-info{display:flex;align-items:center;gap:16px}
+.profile-meta{flex:1}
+.profile-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px}
+.profile-empresa{font-size:13px;color:var(--muted2);margin-bottom:10px}
+.profile-tags{display:flex;gap:8px;flex-wrap:wrap}
+.profile-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;font-size:11px;color:var(--muted2)}
+.profile-actions{display:flex;gap:8px;flex-shrink:0}
+.drive-link-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:#1a73e815;border:1px solid #1a73e830;border-radius:20px;font-size:12px;color:#4285f4;text-decoration:none;transition:background .15s}
+.drive-link-badge:hover{background:#1a73e825}
+
+/* PROFILE STATS */
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.profile-stat{text-align:center}
+.profile-stat-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:700}
+.profile-stat-val.green{color:var(--accent)}.profile-stat-val.orange{color:var(--orange)}
+.profile-stat-label{font-size:11px;color:var(--muted2);margin-top:2px}
+
+/* NOTAS */
+.notas-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:#000000bb;display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(4px)}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:28px;width:500px;max-width:95vw;transform:translateY(12px);transition:transform .2s;max-height:88vh;overflow-y:auto}
+.modal-bg.open .modal{transform:translateY(0)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.modal-close{background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{color:var(--text)}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
+.confirm-wrap{text-align:center;padding:8px 0}
+.confirm-icon{font-size:40px;margin-bottom:14px}
+.confirm-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px}
+.confirm-text{font-size:13px;color:var(--muted2);line-height:1.5}
+
+/* PREVIEW */
+.msg-preview-box{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:16px;font-size:13px;line-height:1.7;white-space:pre-wrap;border-left:3px solid var(--accent);margin-top:4px}
+.preview-meta{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:14px}
+.preview-to{font-size:12px;color:var(--muted2)}
+.preview-to strong{color:var(--text);font-size:13px;display:block}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--accent);border-radius:var(--radius);padding:12px 18px;font-size:13px;color:var(--accent);opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none;font-weight:500}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.error{border-color:var(--red);color:var(--red)}
+
+.ver-todas{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-top:1px solid var(--border);font-size:13px;color:var(--muted2);cursor:pointer;transition:color .15s}
+.ver-todas:hover{color:var(--accent)}
+.mono{font-family:'Syne',sans-serif}
+
+/* CLIENTE CARD */
+.clientes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.cliente-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;cursor:pointer;transition:all .2s;position:relative}
+.cliente-card:hover{border-color:var(--accent-glow);transform:translateY(-1px);box-shadow:0 4px 20px #00c97a10}
+.cliente-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cliente-card-info{display:flex;align-items:center;gap:12px}
+.cliente-card-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:600}
+.cliente-card-empresa{font-size:12px;color:var(--muted2);margin-top:1px}
+.cliente-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.cliente-card-stat{font-size:11px;color:var(--muted2)}
+.cliente-card-stat strong{color:var(--text);font-size:13px;display:block;font-family:'Syne',sans-serif}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-icon">A</div>
+      <div class="login-brand">AFTERMOON</div>
+    </div>
+    <div class="login-title">Entrar no Orbit</div>
+    <div class="login-desc">Sistema de gestão da Aftermoon Agency</div>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-field"><label>E-mail</label><input type="email" id="login-email" placeholder="seu@email.com"></div>
+    <div class="login-field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()"></div>
+    <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:8px" id="btn-login" onclick="fazerLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">A</div>
+        <div><div class="logo-name">AFTERMOON</div></div>
+      </div>
+      <div class="logo-sub">ORBIT · ERP</div>
+    </div>
+    <div class="sidebar-section">Menu</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Painel
+    </div>
+    <div class="nav-item" onclick="showPage('clientes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Clientes
+    </div>
+    <div class="nav-item" onclick="showPage('cobrancas')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Cobranças
+    </div>
+    <div class="nav-item" onclick="showPage('nova')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Nova cobrança
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebar-avatar">L</div>
+        <div><div class="user-name" id="sidebar-name">Usuário</div><div class="user-role">Aftermoon Agency</div></div>
+      </div>
+      <div class="logout-btn" onclick="fazerLogout()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div id="topbar-back" style="display:none" class="topbar-back" onclick="voltarDePerfil()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Clientes
+        </div>
+        <div class="topbar-title" id="topbar-title">Painel</div>
+      </div>
+      <button class="btn btn-primary btn-lg" onclick="showPage('nova')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nova cobrança
+      </button>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Faturamento total<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>
+            <div class="stat-value green" id="stat-faturamento">R$ 0</div>
+            <div class="stat-change">Em aberto: <span id="stat-aberto">R$ 0</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Clientes ativos<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+            <div class="stat-value" id="stat-clientes">0</div>
+            <div class="stat-change" id="stat-clientes-drive">0 com Drive linkado</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Vencendo hoje<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="stat-value yellow" id="stat-hoje">0</div>
+            <div class="stat-change" id="stat-hoje-val">R$ 0 em parcelas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Valor em aberto<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <div class="stat-value orange" id="stat-valor-aberto">R$ 0</div>
+            <div class="stat-change" id="stat-vencidas-count">0 vencidas</div>
+          </div>
+        </div>
+        <div class="section-grid">
+          <div class="chart-card">
+            <div class="card-header"><div class="card-title">Faturamento por mês</div></div>
+            <canvas id="chart-fat" height="160"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="card-header"><div class="card-title">Resumo por status</div></div>
+            <div class="donut-wrap">
+              <canvas id="chart-donut" width="130" height="130"></canvas>
+              <div style="width:100%;margin-top:10px" id="donut-legend"></div>
+            </div>
+          </div>
+        </div>
+        <div class="table-card">
+          <div style="padding:16px 20px 0"><div class="card-title">Cobranças recentes</div></div>
+          <table style="margin-top:12px">
+            <thead><tr><th>Cliente / Job</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-recentes"></tbody>
+          </table>
+          <div class="ver-todas" onclick="showPage('cobrancas')">Ver todas as cobranças <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+
+      <!-- CLIENTES GRID -->
+      <div class="page" id="page-clientes">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700">Clientes</div><div style="font-size:12px;color:var(--muted2);margin-top:2px">Todos os clientes da Aftermoon</div></div>
+          <button class="btn btn-outline" onclick="abrirModal('modal-novo-cliente')">+ Novo cliente</button>
+        </div>
+        <div class="clientes-grid" id="clientes-grid"></div>
+      </div>
+
+      <!-- PERFIL CLIENTE -->
+      <div class="page" id="page-perfil">
+        <div class="profile-header">
+          <div class="profile-top">
+            <div class="profile-info">
+              <div class="avatar avatar-lg" id="perfil-avatar"></div>
+              <div class="profile-meta">
+                <div class="profile-name" id="perfil-nome"></div>
+                <div class="profile-empresa" id="perfil-empresa"></div>
+                <div class="profile-tags" id="perfil-tags"></div>
+              </div>
+            </div>
+            <div class="profile-actions" id="perfil-actions"></div>
+          </div>
+          <div class="profile-stats">
+            <div class="profile-stat"><div class="profile-stat-val green" id="perfil-total-fat">R$ 0</div><div class="profile-stat-label">Faturamento total</div></div>
+            <div class="profile-stat"><div class="profile-stat-val orange" id="perfil-aberto">R$ 0</div><div class="profile-stat-label">Em aberto</div></div>
+            <div class="profile-stat"><div class="profile-stat-val" id="perfil-parcelas">0</div><div class="profile-stat-label">Parcelas totais</div></div>
+          </div>
+        </div>
+        <div class="notas-card" id="perfil-notas-card" style="display:none">
+          <div class="card-header"><div class="card-title">Notas internas</div><button class="btn btn-ghost" onclick="salvarNotas()" style="font-size:12px">Salvar</button></div>
+          <textarea id="perfil-notas" placeholder="Anotações sobre o cliente, preferências, histórico..."></textarea>
+        </div>
+        <div class="table-card">
+          <div style="padding:16px 20px 8px"><div class="card-title">Cobranças do cliente</div></div>
+          <table>
+            <thead><tr><th>Job</th><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-perfil"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- COBRANÇAS -->
+      <div class="page" id="page-cobrancas">
+        <div style="margin-bottom:16px"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700">Cobranças</div><div style="font-size:12px;color:var(--muted2);margin-top:2px">Todas as parcelas cadastradas</div></div>
+        <div class="table-card">
+          <table>
+            <thead><tr><th>Cliente / Job</th><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-cobrancas"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- NOVA COBRANÇA -->
+      <div class="page" id="page-nova">
+        <div style="margin-bottom:16px"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700">Nova cobrança</div><div style="font-size:12px;color:var(--muted2);margin-top:2px">Cadastre um novo job e suas parcelas</div></div>
+        <div class="form-card">
+          <div class="form-section">Cliente</div>
+          <div class="field"><label>Selecionar cliente *</label><select id="select-cliente" onchange="selecionarCliente()"><option value="">— Selecione —</option></select></div>
+          <div id="campos-novo-cliente" style="display:none">
+            <hr class="divider">
+            <div class="grid2">
+              <div class="field"><label>Nome *</label><input type="text" id="cli-nome" placeholder="Maria Silva"></div>
+              <div class="field"><label>WhatsApp (DDI) *</label><input type="text" id="cli-fone" placeholder="5511999999999"></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-card">
+          <div class="form-section">Job</div>
+          <div class="field"><label>Nome do job *</label><input type="text" id="job-nome" placeholder="Identidade Visual Completa"></div>
+          <div class="grid2">
+            <div class="field"><label>Valor total (R$) *</label><input type="number" id="job-total" placeholder="0.00" oninput="gerarParcelas()"></div>
+            <div class="field"><label>Parcelas *</label><input type="number" id="job-nparcelas" value="1" min="1" max="24" oninput="gerarParcelas()"></div>
+          </div>
+        </div>
+        <div class="form-card" id="card-parcelas" style="display:none">
+          <div class="form-section">Parcelas e Datas</div>
+          <div id="parcelas-lista"></div>
+        </div>
+        <div class="form-card">
+          <div class="form-section">Notificações</div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="toggle-label">Envio automático</div><div class="toggle-desc">Mensagem automática no dia do vencimento</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="toggle-programar" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="toggle-row" id="toggle-lembrete-row">
+            <div class="toggle-info"><div class="toggle-label">Lembrete antecipado</div><div class="toggle-desc">Avisar <strong id="dias-antes-label">2 dias</strong> antes do vencimento</div></div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <input type="number" id="dias-antes" value="2" min="1" max="7" style="width:60px;text-align:center" oninput="document.getElementById('dias-antes-label').textContent=this.value+' dia'+(this.value>1?'s':'')">
+              <label class="toggle-switch"><input type="checkbox" id="toggle-lembrete"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+            </div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-outline btn-lg" onclick="showPage('dashboard')">Cancelar</button>
+          <button class="btn btn-primary btn-lg" id="btn-salvar" onclick="salvarCobranca()">✓ Salvar cobrança</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVO CLIENTE -->
+<div class="modal-bg" id="modal-novo-cliente">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Novo cliente</div><button class="modal-close" onclick="fecharModal('modal-novo-cliente')">×</button></div>
+    <div class="grid2">
+      <div class="field"><label>Nome *</label><input type="text" id="nc-nome" placeholder="Maria Silva"></div>
+      <div class="field"><label>WhatsApp (DDI) *</label><input type="text" id="nc-fone" placeholder="5511999999999"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Empresa</label><input type="text" id="nc-empresa" placeholder="Nome da empresa"></div>
+      <div class="field"><label>Cargo</label><input type="text" id="nc-cargo" placeholder="CEO, Designer..."></div>
+    </div>
+    <div class="field"><label>Link Google Drive</label><input type="url" id="nc-drive" placeholder="https://drive.google.com/drive/folders/..."></div>
+    <div class="field"><label>Notas internas</label><textarea id="nc-notas" placeholder="Observações, preferências..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="fecharModal('modal-novo-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarNovoCliente()">Salvar cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR CLIENTE -->
+<div class="modal-bg" id="modal-editar-cliente">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Editar cliente</div><button class="modal-close" onclick="fecharModal('modal-editar-cliente')">×</button></div>
+    <div class="grid2">
+      <div class="field"><label>Nome *</label><input type="text" id="ec-nome"></div>
+      <div class="field"><label>WhatsApp (DDI) *</label><input type="text" id="ec-fone"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Empresa</label><input type="text" id="ec-empresa"></div>
+      <div class="field"><label>Cargo</label><input type="text" id="ec-cargo"></div>
+    </div>
+    <div class="field"><label>Link Google Drive</label><input type="url" id="ec-drive" placeholder="https://drive.google.com/drive/folders/..."></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="fecharModal('modal-editar-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoCliente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR PARCELAS -->
+<div class="modal-bg" id="modal-editar-parcelas">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Editar parcelas</div><button class="modal-close" onclick="fecharModal('modal-editar-parcelas')">×</button></div>
+    <div id="edit-parcelas-lista"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="fecharModal('modal-editar-parcelas')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoParcelas()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR -->
+<div class="modal-bg" id="modal-confirmar">
+  <div class="modal" style="width:360px">
+    <div class="confirm-wrap">
+      <div class="confirm-icon">🗑️</div>
+      <div class="confirm-name" id="confirm-nome"></div>
+      <div class="confirm-text" id="confirm-texto"></div>
+    </div>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn btn-outline" onclick="fecharModal('modal-confirmar')">Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirmar-excluir">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PREVIEW ENVIO -->
+<div class="modal-bg" id="modal-preview-envio">
+  <div class="modal" style="width:480px">
+    <div class="modal-header"><div class="modal-title">Preview da mensagem</div><button class="modal-close" onclick="fecharModal('modal-preview-envio')">×</button></div>
+    <div class="preview-meta">
+      <div class="avatar" id="preview-avatar" style="width:36px;height:36px;border-radius:10px"></div>
+      <div><div class="preview-to"><strong id="preview-nome-dest"></strong>via WhatsApp</div><div class="preview-to" id="preview-fone-dest"></div></div>
+    </div>
+    <div class="msg-preview-box" id="preview-msg-box"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="fecharModal('modal-preview-envio')">Cancelar</button>
+      <button class="btn btn-whatsapp btn-lg" id="btn-confirmar-envio">▶ Confirmar envio</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://cqvjimjjmeiwyrxhtlzp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxdmppbWpqbWVpd3lyeGh0bHpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mzc5MzcsImV4cCI6MjA5NTMxMzkzN30.Sm74a0vo5E9emH-fx1mxc0f17q1pRayRaFM0_TX4nW0';
+const EVOLUTION_URL = 'https://evolution-api-production-b358.up.railway.app';
+const EVOLUTION_KEY = '0031e900630b589d7fd542acbfb6c9818063014312db4944a726b600afe98145';
+const EVOLUTION_INSTANCE = 'afternoonagency';
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// UTILS
+const toast = (msg,err=false) => {
+  const t=document.getElementById('toast');
+  t.innerHTML=(err?'⚠ ':'✓ ')+msg;
+  t.className='toast show'+(err?' error':'');
+  setTimeout(()=>t.classList.remove('show'),3000);
+};
+const iniciais = n => n.split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();
+const fmtData = s => { const [y,m,d]=s.split('-'); return `${d}/${m}/${y}`; };
+const hoje = () => new Date().toISOString().split('T')[0];
+const fmtBRL = v => 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
+const fmtBRLShort = v => v>=1000?'R$'+(v/1000).toFixed(0)+'k':'R$'+v.toFixed(0);
+window.fecharModal = id => document.getElementById(id).classList.remove('open');
+const abrirModal = id => document.getElementById(id).classList.add('open');
+window.abrirModal = abrirModal;
+const COLORS=['#00c97a','#3b82f6','#f97316','#8b5cf6','#ec4899','#14b8a6','#f59e0b'];
+const avatarColor = n => { let h=0; for(let c of n) h=(h+c.charCodeAt(0))%COLORS.length; return COLORS[h]; };
+
+let perfilClienteAtual = null;
+let parcelasEdit = [];
+let clienteEdit = null;
+
+// LOGIN
+window.fazerLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const btn = document.getElementById('btn-login');
+  const err = document.getElementById('login-error');
+  btn.textContent = 'Entrando...';
+  err.classList.remove('show');
+  const { data, error } = await db.auth.signInWithPassword({ email, password: senha });
+  if (error) {
+    err.textContent = 'E-mail ou senha incorretos.';
+    err.classList.add('show');
+    btn.textContent = 'Entrar';
+    return;
+  }
+  const nome = email.split('@')[0];
+  document.getElementById('sidebar-name').textContent = nome.charAt(0).toUpperCase()+nome.slice(1);
+  document.getElementById('sidebar-avatar').textContent = nome[0].toUpperCase();
+  document.getElementById('login-wrap').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  carregarDashboard();
+};
+
+window.fazerLogout = async function() {
+  await db.auth.signOut();
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('login-email').value='';
+  document.getElementById('login-senha').value='';
+};
+
+// Verificar sessão existente
+db.auth.getSession().then(({ data }) => {
+  if (data.session) {
+    const email = data.session.user.email;
+    const nome = email.split('@')[0];
+    document.getElementById('sidebar-name').textContent = nome.charAt(0).toUpperCase()+nome.slice(1);
+    document.getElementById('sidebar-avatar').textContent = nome[0].toUpperCase();
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('app').classList.add('show');
+    carregarDashboard();
+  }
+});
+
+// NAVEGAÇÃO
+const TITLES = {dashboard:'Painel',clientes:'Clientes',perfil:'',cobrancas:'Cobranças',nova:'Nova cobrança'};
+window.showPage = function(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('topbar-title').textContent = TITLES[id]||'';
+  document.getElementById('topbar-back').style.display = id==='perfil' ? 'flex' : 'none';
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    const t=n.textContent.trim().toLowerCase();
+    if((id==='dashboard'&&t==='painel')||(id==='clientes'&&t==='clientes')||(id==='cobrancas'&&t==='cobranças')||(id==='nova'&&t.includes('nova'))) n.classList.add('active');
+  });
+  if(id==='dashboard') carregarDashboard();
+  if(id==='clientes') carregarClientes();
+  if(id==='cobrancas') carregarCobrancas();
+  if(id==='nova') carregarClientesSelect();
+};
+
+window.voltarDePerfil = () => showPage('clientes');
+
+// CHARTS
+function desenharDonut(canvas, data) {
+  const ctx=canvas.getContext('2d'),cx=canvas.width/2,cy=canvas.height/2,r=50,inner=32;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const total=data.reduce((a,b)=>a+b.value,0);
+  if(!total){ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='#1e2328';ctx.lineWidth=16;ctx.stroke();return;}
+  let start=-Math.PI/2;
+  data.forEach(d=>{
+    const a=(d.value/total)*Math.PI*2;
+    ctx.beginPath();ctx.arc(cx,cy,r,start,start+a);ctx.strokeStyle=d.color;ctx.lineWidth=16;ctx.stroke();start+=a;
+  });
+  ctx.beginPath();ctx.arc(cx,cy,inner,0,Math.PI*2);ctx.fillStyle='#111316';ctx.fill();
+  ctx.fillStyle='#e2e8f0';ctx.font='bold 14px Syne,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(total,cx,cy-6);ctx.fillStyle='#4a5568';ctx.font='9px Inter,sans-serif';ctx.fillText('total',cx,cy+8);
+}
+
+function desenharLinhas(canvas, labels, values, color) {
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth||600;
+  const w=canvas.width,h=canvas.height;
+  if(!values||values.length<2){ctx.clearRect(0,0,w,h);return;}
+  ctx.clearRect(0,0,w,h);
+  const max=Math.max(...values)||1;
+  const pad={top:10,right:10,bottom:24,left:50};
+  const cw=w-pad.left-pad.right,ch=h-pad.top-pad.bottom;
+  ctx.strokeStyle='#1e2328';ctx.lineWidth=1;
+  [0,.25,.5,.75,1].forEach(t=>{
+    const y=pad.top+ch*(1-t);
+    ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cw,y);ctx.stroke();
+    ctx.fillStyle='#4a5568';ctx.font='10px Inter';ctx.textAlign='right';
+    ctx.fillText(fmtBRLShort(max*t),pad.left-6,y+3);
+  });
+  const pts=values.map((v,i)=>({x:pad.left+i*(cw/(values.length-1)),y:pad.top+ch*(1-v/max)}));
+  ctx.beginPath();ctx.moveTo(pts[0].x,pad.top+ch);
+  pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts[pts.length-1].x,pad.top+ch);ctx.closePath();
+  const g=ctx.createLinearGradient(0,pad.top,0,pad.top+ch);g.addColorStop(0,color+'40');g.addColorStop(1,color+'00');
+  ctx.fillStyle=g;ctx.fill();
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke();
+  pts.forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+    ctx.fillStyle='#4a5568';ctx.font='9px Inter';ctx.textAlign='center';
+    if(labels[i]) ctx.fillText(labels[i],p.x,pad.top+ch+14);
+  });
+}
+
+// DASHBOARD
+async function carregarDashboard() {
+  const {data:parcelas} = await db.from('parcelas').select('*, cobrancas(id,job,total_parcelas,clientes(nome,telefone))').order('data_vencimento',{ascending:false});
+  const {data:clientes} = await db.from('clientes').select('*');
+  if(!parcelas) return;
+  const hj=hoje();
+  const total=parcelas.reduce((a,p)=>a+parseFloat(p.valor||0),0);
+  const pendentes=parcelas.filter(p=>!p.enviada);
+  const enviadas=parcelas.filter(p=>p.enviada);
+  const venceHoje=parcelas.filter(p=>p.data_vencimento===hj&&!p.enviada);
+  const vencidas=parcelas.filter(p=>p.data_vencimento<hj&&!p.enviada);
+  const aberto=pendentes.reduce((a,p)=>a+parseFloat(p.valor||0),0);
+  const comDrive=(clientes||[]).filter(c=>c.drive_url).length;
+
+  document.getElementById('stat-faturamento').textContent=fmtBRL(total);
+  document.getElementById('stat-aberto').textContent=fmtBRL(aberto);
+  document.getElementById('stat-clientes').textContent=(clientes||[]).length;
+  document.getElementById('stat-clientes-drive').textContent=comDrive+' com Drive linkado';
+  document.getElementById('stat-hoje').textContent=venceHoje.length;
+  document.getElementById('stat-hoje-val').textContent=fmtBRL(venceHoje.reduce((a,p)=>a+parseFloat(p.valor||0),0))+' em parcelas';
+  document.getElementById('stat-valor-aberto').textContent=fmtBRL(aberto);
+  document.getElementById('stat-vencidas-count').textContent=vencidas.length+' vencidas';
+
+  const donutData=[
+    {label:'Enviadas',value:enviadas.length,color:'#00c97a'},
+    {label:'Pendentes',value:pendentes.length-vencidas.length,color:'#eab308'},
+    {label:'Vencidas',value:vencidas.length,color:'#ef4444'},
+  ].filter(d=>d.value>0);
+  desenharDonut(document.getElementById('chart-donut'),donutData);
+  document.getElementById('donut-legend').innerHTML=donutData.map(d=>`
+    <div class="legend-row"><div class="legend-dot" style="background:${d.color}"></div>
+    <div class="legend-label">${d.label}</div><div class="legend-val">${d.value}</div>
+    <div class="legend-pct">${parcelas.length?Math.round(d.value/parcelas.length*100):0}%</div></div>`).join('');
+
+  const porMes={};
+  parcelas.forEach(p=>{const m=p.data_vencimento?.slice(0,7);if(m)porMes[m]=(porMes[m]||0)+parseFloat(p.valor||0);});
+  const meses=Object.keys(porMes).sort().slice(-6);
+  setTimeout(()=>desenharLinhas(document.getElementById('chart-fat'),meses.map(m=>{const[y,mo]=m.split('-');return mo+'/'+y.slice(2);}),meses.map(m=>porMes[m]),'#00c97a'),50);
+
+  renderTbody('tbody-recentes',parcelas.slice(0,5),true);
+}
+
+// CLIENTES GRID
+async function carregarClientes() {
+  const {data} = await db.from('clientes').select('*').order('nome');
+  const {data:parcelas} = await db.from('parcelas').select('*, cobrancas(cliente_id)');
+  const grid = document.getElementById('clientes-grid');
+  if(!data?.length){grid.innerHTML='<div style="color:var(--muted2);padding:40px;text-align:center">Nenhum cliente cadastrado ainda.<br><br><button class="btn btn-primary" onclick="abrirModal(\'modal-novo-cliente\')">+ Adicionar cliente</button></div>';return;}
+  grid.innerHTML=data.map(c=>{
+    const cor=avatarColor(c.nome);
+    const cParc=(parcelas||[]).filter(p=>p.cobrancas?.cliente_id===c.id);
+    const aberto=cParc.filter(p=>!p.enviada).reduce((a,p)=>a+parseFloat(p.valor||0),0);
+    return `<div class="cliente-card" onclick="abrirPerfil('${c.id}')">
+      <div class="cliente-card-top">
+        <div class="cliente-card-info">
+          <div class="avatar" style="background:${cor}20;color:${cor};width:40px;height:40px;border-radius:12px;font-size:14px">${iniciais(c.nome)}</div>
+          <div><div class="cliente-card-name">${c.nome}</div><div class="cliente-card-empresa">${c.empresa||c.telefone}</div></div>
+        </div>
+        ${c.drive_url?`<a href="${c.drive_url}" target="_blank" onclick="event.stopPropagation()" title="Abrir Drive" class="btn btn-drive" style="padding:5px 8px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Drive</a>`:''}
+      </div>
+      <div class="cliente-card-footer">
+        <div class="cliente-card-stat"><strong>${fmtBRL(aberto)}</strong>em aberto</div>
+        <div class="cliente-card-stat" style="text-align:right"><strong>${cParc.length}</strong>parcelas</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// PERFIL
+async function abrirPerfil(clienteId) {
+  showPage('perfil');
+  const {data:c} = await db.from('clientes').select('*').eq('id',clienteId).single();
+  const {data:parcelas} = await db.from('parcelas').select('*, cobrancas(id,job,total_parcelas)').eq('cobrancas.cliente_id',clienteId);
+  const pFiltradas = (parcelas||[]).filter(p=>p.cobrancas);
+  perfilClienteAtual = c;
+
+  const cor=avatarColor(c.nome);
+  document.getElementById('topbar-title').textContent=c.nome;
+  document.getElementById('perfil-avatar').style.background=cor+'20';
+  document.getElementById('perfil-avatar').style.color=cor;
+  document.getElementById('perfil-avatar').style.width='52px';
+  document.getElementById('perfil-avatar').style.height='52px';
+  document.getElementById('perfil-avatar').style.borderRadius='14px';
+  document.getElementById('perfil-avatar').style.fontSize='20px';
+  document.getElementById('perfil-avatar').style.fontFamily='Syne,sans-serif';
+  document.getElementById('perfil-avatar').style.fontWeight='700';
+  document.getElementById('perfil-avatar').style.display='flex';
+  document.getElementById('perfil-avatar').style.alignItems='center';
+  document.getElementById('perfil-avatar').style.justifyContent='center';
+  document.getElementById('perfil-avatar').textContent=iniciais(c.nome);
+  document.getElementById('perfil-nome').textContent=c.nome;
+  document.getElementById('perfil-empresa').textContent=c.empresa?`${c.cargo?c.cargo+' · ':''}${c.empresa}`:c.telefone;
+
+  let tags=`<span class="profile-tag"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.11 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3 2.24h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/></svg>${c.telefone}</span>`;
+  if(c.drive_url) tags+=`<a href="${c.drive_url}" target="_blank" class="drive-link-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Abrir Google Drive</a>`;
+  document.getElementById('perfil-tags').innerHTML=tags;
+
+  document.getElementById('perfil-actions').innerHTML=`
+    <button class="btn btn-outline" onclick="abrirEditarCliente('${c.id}','${c.nome}','${c.telefone||''}','${c.empresa||''}','${c.cargo||''}','${c.drive_url||''}')">✎ Editar</button>
+    <button class="btn btn-danger" onclick="confirmarExcluirCliente('${c.id}','${c.nome}')">✕</button>`;
+
+  const fat=pFiltradas.reduce((a,p)=>a+parseFloat(p.valor||0),0);
+  const aberto=pFiltradas.filter(p=>!p.enviada).reduce((a,p)=>a+parseFloat(p.valor||0),0);
+  document.getElementById('perfil-total-fat').textContent=fmtBRL(fat);
+  document.getElementById('perfil-aberto').textContent=fmtBRL(aberto);
+  document.getElementById('perfil-parcelas').textContent=pFiltradas.length;
+
+  if(c.notas){
+    document.getElementById('perfil-notas-card').style.display='block';
+    document.getElementById('perfil-notas').value=c.notas;
+  } else {
+    document.getElementById('perfil-notas-card').style.display='block';
+    document.getElementById('perfil-notas').value='';
+  }
+
+  renderTbody('tbody-perfil',pFiltradas,false,true);
+}
+window.abrirPerfil=abrirPerfil;
+
+window.salvarNotas = async function() {
+  if(!perfilClienteAtual) return;
+  const notas=document.getElementById('perfil-notas').value;
+  await db.from('clientes').update({notas}).eq('id',perfilClienteAtual.id);
+  toast('Notas salvas');
+};
+
+// COBRANÇAS
+async function carregarCobrancas() {
+  const {data} = await db.from('parcelas').select('*, cobrancas(id,job,total_parcelas,clientes(nome,telefone))').order('data_vencimento',{ascending:true});
+  renderTbody('tbody-cobrancas',data||[],false);
+}
+
+// RENDER TBODY
+function renderTbody(tbodyId, data, compact, semParcela=false) {
+  const tbody=document.getElementById(tbodyId);
+  const hj=hoje();
+  const cols=compact?5:semParcela?6:6;
+  if(!data.length){tbody.innerHTML=`<tr><td colspan="${cols}" class="empty">Nenhuma cobrança ainda.</td></tr>`;return;}
+  tbody.innerHTML=data.map(p=>{
+    const cli=p.cobrancas?.clientes;
+    const job=p.cobrancas;
+    const nome=cli?.nome||'—';
+    const cor=avatarColor(nome);
+    const isHoje=p.data_vencimento===hj;
+    const isVencida=p.data_vencimento<hj&&!p.enviada;
+    const badge=p.enviada?'<span class="badge badge-sent">Enviada</span>':isHoje?'<span class="badge badge-today">Hoje</span>':isVencida?'<span class="badge badge-overdue">Vencida</span>':'<span class="badge badge-pending">Pendente</span>';
+    const acoes=`<div class="btn-group">
+      ${!p.enviada?`<button class="btn btn-whatsapp" onclick="enviarAgora('${p.id}','${nome}','${job?.job||''}','${p.numero}','${job?.total_parcelas||1}','${p.valor}','${cli?.telefone||''}','${p.data_vencimento}')">▶ Enviar</button>`:''}
+      <button class="btn btn-ghost" onclick="abrirEditarParcelas('${job?.id}','${job?.job||''}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <button class="btn btn-ghost" style="color:var(--red)" onclick="confirmarExcluirCobranca('${job?.id}','${job?.job||''}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+    </div>`;
+    if(compact) return `<tr>
+      <td><div class="flex"><div class="avatar" style="background:${cor}20;color:${cor}">${iniciais(nome)}</div><div><div class="name">${nome}</div><div class="sub">${job?.job||'—'}</div></div></div></td>
+      <td style="color:${isHoje?'var(--orange)':isVencida?'var(--red)':'var(--muted2)'};font-size:12px">${isHoje?'Hoje':fmtData(p.data_vencimento)}</td>
+      <td style="font-weight:500">${fmtBRL(p.valor)}</td><td>${badge}</td><td>${acoes}</td></tr>`;
+    if(semParcela) return `<tr>
+      <td><div class="name">${job?.job||'—'}</div></td>
+      <td style="font-size:12px;color:var(--muted2)">${p.numero}/${job?.total_parcelas||'?'}</td>
+      <td style="color:${isHoje?'var(--orange)':isVencida?'var(--red)':'var(--muted2)'};font-size:12px">${isHoje?'Hoje':fmtData(p.data_vencimento)}</td>
+      <td style="font-weight:500">${fmtBRL(p.valor)}</td><td>${badge}</td><td>${acoes}</td></tr>`;
+    return `<tr>
+      <td><div class="flex"><div class="avatar" style="background:${cor}20;color:${cor}">${iniciais(nome)}</div><div><div class="name">${nome}</div><div class="sub">${job?.job||'—'}</div></div></div></td>
+      <td style="font-size:12px;color:var(--muted2)">${p.numero}/${job?.total_parcelas||'?'}</td>
+      <td style="color:${isHoje?'var(--orange)':isVencida?'var(--red)':'var(--muted2)'};font-size:12px">${isHoje?'Hoje':fmtData(p.data_vencimento)}</td>
+      <td style="font-weight:500">${fmtBRL(p.valor)}</td><td>${badge}</td><td>${acoes}</td></tr>`;
+  }).join('');
+}
+
+// ENVIAR
+window.enviarAgora = function(parcelaId,nome,job,num,total,valor,telefone,dataVenc) {
+  const msg=`Olá, ${nome}! 👋\n\nPassando para lembrar que a parcela *${num} de ${total}* do job *${job}* vence em *${fmtData(dataVenc)}*.\n\n💰 Valor: *${fmtBRL(valor)}*\n\nQualquer dúvida, estou à disposição. Obrigado! 🙏`;
+  const cor=avatarColor(nome);
+  const av=document.getElementById('preview-avatar');
+  av.style.background=cor+'20';av.style.color=cor;av.textContent=iniciais(nome);
+  document.getElementById('preview-nome-dest').textContent=nome;
+  document.getElementById('preview-fone-dest').textContent=telefone;
+  document.getElementById('preview-msg-box').textContent=msg;
+  document.getElementById('btn-confirmar-envio').onclick=()=>confirmarEnvio(parcelaId,nome,telefone,msg);
+  abrirModal('modal-preview-envio');
+};
+
+async function confirmarEnvio(parcelaId,nome,telefone,msg) {
+  document.getElementById('btn-confirmar-envio').textContent='Enviando...';
+  try {
+    const res=await fetch(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`,{method:'POST',headers:{'Content-Type':'application/json','apikey':EVOLUTION_KEY},body:JSON.stringify({number:telefone,text:msg})});
+    if(!res.ok) throw new Error('Erro '+res.status);
+    await db.from('parcelas').update({enviada:true}).eq('id',parcelaId);
+    fecharModal('modal-preview-envio');
+    toast('Mensagem enviada para '+nome);
+    carregarDashboard();
+    if(document.getElementById('page-cobrancas').classList.contains('active')) carregarCobrancas();
+    if(document.getElementById('page-perfil').classList.contains('active')&&perfilClienteAtual) abrirPerfil(perfilClienteAtual.id);
+  } catch(e){toast('Erro: '+e.message,true);}
+  finally{document.getElementById('btn-confirmar-envio').textContent='▶ Confirmar envio';}
+}
+
+// EXCLUIR COBRANÇA
+window.confirmarExcluirCobranca = function(cobId,jobNome) {
+  document.getElementById('confirm-nome').textContent=jobNome;
+  document.getElementById('confirm-texto').textContent='Isso excluirá o job e todas as parcelas. Ação irreversível.';
+  document.getElementById('btn-confirmar-excluir').onclick=()=>excluirCobranca(cobId);
+  abrirModal('modal-confirmar');
+};
+async function excluirCobranca(cobId) {
+  await db.from('parcelas').delete().eq('cobranca_id',cobId);
+  await db.from('cobrancas').delete().eq('id',cobId);
+  fecharModal('modal-confirmar');toast('Cobrança excluída');
+  carregarDashboard();
+  if(document.getElementById('page-cobrancas').classList.contains('active')) carregarCobrancas();
+  if(document.getElementById('page-perfil').classList.contains('active')&&perfilClienteAtual) abrirPerfil(perfilClienteAtual.id);
+}
+
+// EDITAR PARCELAS
+window.abrirEditarParcelas = async function(cobId,jobNome) {
+  const {data}=await db.from('parcelas').select('*').eq('cobranca_id',cobId).order('numero');
+  parcelasEdit=data;
+  document.getElementById('edit-parcelas-lista').innerHTML=`
+    <p style="font-size:12px;color:var(--muted2);margin-bottom:16px">Job: <strong style="color:var(--text)">${jobNome}</strong></p>
+    ${data.map(p=>`<div class="parcela-row"><div class="parcela-num">${p.numero}</div>
+    <input type="date" id="ep-d-${p.id}" value="${p.data_vencimento}">
+    <input type="number" id="ep-v-${p.id}" value="${p.valor}"></div>`).join('')}`;
+  abrirModal('modal-editar-parcelas');
+};
+window.salvarEdicaoParcelas = async function() {
+  for(const p of parcelasEdit) await db.from('parcelas').update({data_vencimento:document.getElementById(`ep-d-${p.id}`).value,valor:parseFloat(document.getElementById(`ep-v-${p.id}`).value)}).eq('id',p.id);
+  fecharModal('modal-editar-parcelas');toast('Parcelas atualizadas');carregarDashboard();
+  if(document.getElementById('page-cobrancas').classList.contains('active')) carregarCobrancas();
+};
+
+// NOVO CLIENTE
+window.salvarNovoCliente = async function() {
+  const nome=document.getElementById('nc-nome').value.trim();
+  const fone=document.getElementById('nc-fone').value.trim();
+  if(!nome||!fone){toast('Nome e WhatsApp são obrigatórios',true);return;}
+  const {error}=await db.from('clientes').insert({nome,telefone:fone,empresa:document.getElementById('nc-empresa').value.trim(),cargo:document.getElementById('nc-cargo').value.trim(),drive_url:document.getElementById('nc-drive').value.trim(),notas:document.getElementById('nc-notas').value.trim()});
+  if(error){toast('Erro: '+error.message,true);return;}
+  fecharModal('modal-novo-cliente');toast('Cliente cadastrado!');
+  ['nc-nome','nc-fone','nc-empresa','nc-cargo','nc-drive','nc-notas'].forEach(id=>document.getElementById(id).value='');
+  carregarClientes();
+};
+
+// EDITAR CLIENTE
+window.abrirEditarCliente = function(id,nome,fone,empresa,cargo,drive) {
+  clienteEdit=id;
+  document.getElementById('ec-nome').value=nome;
+  document.getElementById('ec-fone').value=fone;
+  document.getElementById('ec-empresa').value=empresa;
+  document.getElementById('ec-cargo').value=cargo;
+  document.getElementById('ec-drive').value=drive;
+  abrirModal('modal-editar-cliente');
+};
+window.salvarEdicaoCliente = async function() {
+  const nome=document.getElementById('ec-nome').value.trim();
+  const fone=document.getElementById('ec-fone').value.trim();
+  if(!nome||!fone){toast('Nome e WhatsApp são obrigatórios',true);return;}
+  await db.from('clientes').update({nome,telefone:fone,empresa:document.getElementById('ec-empresa').value.trim(),cargo:document.getElementById('ec-cargo').value.trim(),drive_url:document.getElementById('ec-drive').value.trim()}).eq('id',clienteEdit);
+  fecharModal('modal-editar-cliente');toast('Cliente atualizado');
+  carregarClientes();
+  if(perfilClienteAtual?.id===clienteEdit) abrirPerfil(clienteEdit);
+};
+
+// EXCLUIR CLIENTE
+window.confirmarExcluirCliente = function(id,nome) {
+  document.getElementById('confirm-nome').textContent=nome;
+  document.getElementById('confirm-texto').textContent='Isso excluirá o cliente e todas as suas cobranças. Ação irreversível.';
+  document.getElementById('btn-confirmar-excluir').onclick=()=>excluirCliente(id);
+  abrirModal('modal-confirmar');
+};
+async function excluirCliente(id) {
+  const {data:cobs}=await db.from('cobrancas').select('id').eq('cliente_id',id);
+  for(const c of cobs||[]){await db.from('parcelas').delete().eq('cobranca_id',c.id);await db.from('cobrancas').delete().eq('id',c.id);}
+  await db.from('clientes').delete().eq('id',id);
+  fecharModal('modal-confirmar');toast('Cliente excluído');showPage('clientes');
+}
+
+// NOVA COBRANÇA
+window.selecionarCliente = function() {
+  const sel=document.getElementById('select-cliente');
+  document.getElementById('campos-novo-cliente').style.display=sel.value?'none':'block';
+};
+async function carregarClientesSelect() {
+  const {data}=await db.from('clientes').select('*').order('nome');
+  const sel=document.getElementById('select-cliente');
+  sel.innerHTML='<option value="">— Selecione ou crie novo —</option>';
+  data?.forEach(c=>{sel.innerHTML+=`<option value="${c.id}">${c.nome}</option>`;});
+  sel.innerHTML+='<option value="novo">+ Novo cliente</option>';
+}
+window.gerarParcelas = function() {
+  const total=parseFloat(document.getElementById('job-total').value)||0;
+  const n=parseInt(document.getElementById('job-nparcelas').value)||1;
+  if(!total||!n){document.getElementById('card-parcelas').style.display='none';return;}
+  document.getElementById('card-parcelas').style.display='block';
+  const hj=new Date();let html='';
+  for(let i=1;i<=n;i++){
+    const d=new Date(hj);d.setMonth(d.getMonth()+(i-1));
+    html+=`<div class="parcela-row"><div class="parcela-num">${i}</div><input type="date" id="parc-d-${i}" value="${d.toISOString().split('T')[0]}"><input type="number" id="parc-v-${i}" value="${(total/n).toFixed(2)}"></div>`;
+  }
+  document.getElementById('parcelas-lista').innerHTML=html;
+};
+window.salvarCobranca = async function() {
+  const jobNome=document.getElementById('job-nome').value.trim();
+  const total=parseFloat(document.getElementById('job-total').value);
+  const nP=parseInt(document.getElementById('job-nparcelas').value);
+  let cliId=document.getElementById('select-cliente').value;
+  if(cliId==='novo'||!cliId){
+    const nome=document.getElementById('cli-nome').value.trim();
+    const fone=document.getElementById('cli-fone').value.trim();
+    if(!nome||!fone){toast('Preencha nome e WhatsApp do cliente',true);return;}
+    const {data:cli,error}=await db.from('clientes').insert({nome,telefone:fone}).select().single();
+    if(error){toast('Erro: '+error.message,true);return;}
+    cliId=cli.id;
+  }
+  if(!jobNome||!total||!nP){toast('Preencha todos os campos do job',true);return;}
+  const btn=document.getElementById('btn-salvar');btn.textContent='Salvando...';
+  const {data:cob,error:e2}=await db.from('cobrancas').insert({cliente_id:cliId,job:jobNome,valor_total:total,total_parcelas:nP}).select().single();
+  if(e2){toast('Erro: '+e2.message,true);btn.textContent='✓ Salvar cobrança';return;}
+  const parcelas=[];
+  for(let i=1;i<=nP;i++) parcelas.push({cobranca_id:cob.id,numero:i,valor:parseFloat(document.getElementById(`parc-v-${i}`).value),data_vencimento:document.getElementById(`parc-d-${i}`).value,enviada:false});
+  await db.from('parcelas').insert(parcelas);
+  toast('Cobrança salva!');btn.textContent='✓ Salvar cobrança';
+  document.getElementById('job-nome').value='';document.getElementById('job-total').value='';
+  document.getElementById('job-nparcelas').value='1';document.getElementById('card-parcelas').style.display='none';
+  setTimeout(()=>showPage('dashboard'),800);
+};
+
+// TOGGLES
+document.getElementById('toggle-programar').addEventListener('change',function(){
+  const row=document.getElementById('toggle-lembrete-row');
+  row.style.opacity=this.checked?'1':'0.35';row.style.pointerEvents=this.checked?'auto':'none';
+  if(!this.checked) document.getElementById('toggle-lembrete').checked=false;
+});
+
+document.querySelectorAll('.modal-bg').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+window.addEventListener('resize',()=>{if(document.getElementById('page-dashboard').classList.contains('active'))carregarDashboard();});
+</script>
+</body>
+</html>
