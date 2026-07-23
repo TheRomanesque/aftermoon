@@ -91,7 +91,7 @@ async function enviarGroundControl() {
 }
 
 // CRON — todo dia às 9h
-cron.schedule('0 9 * * *', async () => {
+cron.schedule('8 11 * * *', async () => {
   await enviarCobrancas();
   await enviarGroundControl();
 });
