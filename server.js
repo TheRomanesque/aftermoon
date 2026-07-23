@@ -19,7 +19,6 @@ const NOTION_DB_ID = '6e16239725d64cda85cfc23cdcb37595';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const notion = new Client({ auth: NOTION_TOKEN });
 
-// SERVIDOR WEB
 http.createServer((req, res) => {
   const file = path.join(__dirname, 'painel-cobrancas.html');
   fs.readFile(file, (err, data) => {
@@ -29,7 +28,6 @@ http.createServer((req, res) => {
   });
 }).listen(PORT, () => console.log('🌐 Servidor rodando na porta ' + PORT));
 
-// COBRANÇAS
 async function enviarCobrancas() {
   const hoje = new Date().toISOString().split('T')[0];
   console.log(`[COBRANÇAS] Verificando parcelas para ${hoje}...`);
@@ -37,7 +35,8 @@ async function enviarCobrancas() {
     .from('parcelas')
     .select('*, cobrancas(job, valor_total, total_parcelas, clientes(nome, telefone))')
     .eq('data_vencimento', hoje)
-    .eq('enviada', false);
+    .eq('enviada', false)
+    .eq('quitado', false);
   if (error) { console.error('Erro Supabase:', error); return; }
   if (!parcelas.length) { console.log('[COBRANÇAS] Nenhuma parcela para hoje.'); return; }
   for (const parcela of parcelas) {
@@ -54,7 +53,6 @@ async function enviarCobrancas() {
   }
 }
 
-// GROUND CONTROL
 async function enviarGroundControl() {
   const hoje = new Date().toISOString().split('T')[0];
   console.log(`[GROUND CONTROL] Verificando conteúdos para ${hoje}...`);
@@ -72,14 +70,19 @@ async function enviarGroundControl() {
       const tipo = props.Tipo?.select?.name || '';
       const tema = props.Tema?.title?.[0]?.plain_text || '';
       const instrucao = props.Instrução?.rich_text?.[0]?.plain_text || '';
+      const territorio = props.Território?.rich_text?.[0]?.plain_text || '';
       if (!clienteNome) { continue; }
       const { data: clientes } = await supabase.from('clientes').select('nome, telefone').ilike('nome', `%${clienteNome}%`).limit(1);
       if (!clientes?.length) { console.log(`[GROUND CONTROL] ❌ "${clienteNome}" não encontrado.`); continue; }
       const cliente = clientes[0];
-      const mensagem = `Bom dia, ${cliente.nome}! 🎥\n\nHoje é dia de *${tipo}*: "${tema}" — ${instrucao}\n\nQualquer dúvida, me chama! 🚀`;
+
+      const primeiroNome = cliente.nome.split(' ')[0];
+      const mensagem = `Bom dia, ${primeiroNome}! \n\n🎥 Hoje é dia de gravar: *"${tema}"*${territorio ? ` — Território: ${territorio}` : ''}.\n\n${instrucao}\n\n📲 Postar onde? *${tipo}*\n\nQualquer dúvida, me chama! 🚀`;
+
       try {
         await axios.post(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`, { number: cliente.telefone, text: mensagem }, { headers: { apikey: EVOLUTION_KEY } });
         try { await notion.pages.update({ page_id: page.id, properties: { Status: { select: { name: 'Enviado' } } } }); } catch(e) {}
+        await supabase.from('ground_control_log').insert({ cliente_nome: cliente.nome, tipo, tema, telefone: cliente.telefone });
         console.log(`[GROUND CONTROL] ✅ Enviado para ${cliente.nome} — ${tipo}: ${tema}`);
       } catch (err) {
         console.error(`[GROUND CONTROL] ❌ Erro para ${cliente.nome}:`, err.message);
@@ -90,11 +93,11 @@ async function enviarGroundControl() {
   }
 }
 
-// CRON — todo dia às 9h
+// 08:08 horário de Brasília = 11:08 UTC
 cron.schedule('8 11 * * *', async () => {
   await enviarCobrancas();
   await enviarGroundControl();
 });
 
 console.log('🚀 Aftermoon Orbit + Ground Control rodando...');
-console.log('📅 Disparos agendados para 9h diariamente.');
+console.log('⏰ Disparos agendados para 08:08 (horário de Brasília).');
