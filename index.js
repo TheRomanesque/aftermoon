@@ -75,12 +75,13 @@ async function enviarGroundControl() {
   }
 }
 
-cron.schedule('0 9 * * *', async () => {
+// 08:08 horário de Brasília = 11:08 UTC
+cron.schedule('8 11 * * *', async () => {
   await enviarCobrancas();
   await enviarGroundControl();
 });
 
 console.log('🚀 Aftermoon Orbit + Ground Control rodando...');
-console.log('📅 Disparos agendados para 9h diariamente.');
+console.log('📅 Disparos agendados para 08:08 (horário de Brasília).');
 enviarCobrancas();
 enviarGroundControl();
