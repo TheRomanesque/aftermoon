@@ -12,7 +12,7 @@ const SUPABASE_URL = 'https://cqvjimjjmeiwyrxhtlzp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxdmppbWpqbWVpd3lyeGh0bHpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3Mzc5MzcsImV4cCI6MjA5NTMxMzkzN30.Sm74a0vo5E9emH-fx1mxc0f17q1pRayRaFM0_TX4nW0';
 const EVOLUTION_URL = 'https://evolution-api-production-b358.up.railway.app';
 const EVOLUTION_KEY = '0031e900630b589d7fd542acbfb6c9818063014312db4944a726b600afe98145';
-const EVOLUTION_INSTANCE = 'afternoonagency';
+const EVOLUTION_INSTANCE = 'aftermoon';
 const NOTION_TOKEN = 'ntn_J223093786127UCm1ZN1c2VwnNgWB1szb0pMQ3qRoPBdpT';
 const NOTION_DB_ID = '6e16239725d64cda85cfc23cdcb37595';
 
