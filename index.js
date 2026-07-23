@@ -21,7 +21,8 @@ async function enviarCobrancas() {
     .from('parcelas')
     .select('*, cobrancas(job, valor_total, total_parcelas, clientes(nome, telefone))')
     .eq('data_vencimento', hoje)
-    .eq('enviada', false);
+    .eq('enviada', false)
+    .eq('quitado', false);
   if (error) { console.error('Erro Supabase:', error); return; }
   if (!parcelas.length) { console.log('[COBRANÇAS] Nenhuma parcela para hoje.'); return; }
   for (const parcela of parcelas) {
@@ -44,48 +45,26 @@ async function enviarGroundControl() {
   try {
     const response = await notion.databases.query({
       database_id: NOTION_DB_ID,
-      filter: {
-        property: 'Data',
-        date: { equals: hoje }
-      }
+      filter: { property: 'Data', date: { equals: hoje } }
     });
     if (!response.results.length) { console.log('[GROUND CONTROL] Nenhum conteúdo para hoje.'); return; }
     for (const page of response.results) {
       const props = page.properties;
-
-      // Pega status atual — ignora se já foi enviado
       const statusAtual = props.Status?.select?.name || props.Status?.status?.name || '';
-      if (statusAtual === 'Enviado') { console.log('[GROUND CONTROL] Já enviado, pulando.'); continue; }
-
+      if (statusAtual === 'Enviado') { continue; }
       const clienteNome = props.Cliente?.rich_text?.[0]?.plain_text || '';
       const tipo = props.Tipo?.select?.name || '';
       const tema = props.Tema?.title?.[0]?.plain_text || '';
       const instrucao = props.Instrução?.rich_text?.[0]?.plain_text || '';
-
-      if (!clienteNome) { console.log('[GROUND CONTROL] Cliente não informado, pulando.'); continue; }
-
-      const { data: clientes } = await supabase
-        .from('clientes')
-        .select('nome, telefone')
-        .ilike('nome', `%${clienteNome}%`)
-        .limit(1);
-
-      if (!clientes?.length) { console.log(`[GROUND CONTROL] ❌ "${clienteNome}" não encontrado no Orbit.`); continue; }
-
+      if (!clienteNome) { continue; }
+      const { data: clientes } = await supabase.from('clientes').select('nome, telefone').ilike('nome', `%${clienteNome}%`).limit(1);
+      if (!clientes?.length) { console.log(`[GROUND CONTROL] ❌ "${clienteNome}" não encontrado.`); continue; }
       const cliente = clientes[0];
       const mensagem = `Bom dia, ${cliente.nome}! 🎥\n\nHoje é dia de *${tipo}*: "${tema}" — ${instrucao}\n\nQualquer dúvida, me chama! 🚀`;
-
       try {
         await axios.post(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`, { number: cliente.telefone, text: mensagem }, { headers: { apikey: EVOLUTION_KEY } });
-
-        // Tenta atualizar status no Notion
-        try {
-          await notion.pages.update({
-            page_id: page.id,
-            properties: { Status: { select: { name: 'Enviado' } } }
-          });
-        } catch(e) { console.log('[GROUND CONTROL] Aviso: não conseguiu atualizar status no Notion.'); }
-
+        try { await notion.pages.update({ page_id: page.id, properties: { Status: { select: { name: 'Enviado' } } } }); } catch(e) {}
+        await supabase.from('ground_control_log').insert({ cliente_nome: cliente.nome, tipo, tema, telefone: cliente.telefone });
         console.log(`[GROUND CONTROL] ✅ Enviado para ${cliente.nome} — ${tipo}: ${tema}`);
       } catch (err) {
         console.error(`[GROUND CONTROL] ❌ Erro para ${cliente.nome}:`, err.message);
@@ -101,7 +80,7 @@ cron.schedule('0 9 * * *', async () => {
   await enviarGroundControl();
 });
 
-console.log('🚀 Aftermoon Orbit rodando...');
-console.log('📅 Cobranças + Ground Control agendados para 9h diariamente.');
+console.log('🚀 Aftermoon Orbit + Ground Control rodando...');
+console.log('📅 Disparos agendados para 9h diariamente.');
 enviarCobrancas();
 enviarGroundControl();

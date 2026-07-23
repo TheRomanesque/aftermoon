@@ -116,6 +116,7 @@ tr:hover td{background:#ffffff03}
 .badge-sent{background:var(--accent-dim);color:var(--accent)}
 .badge-overdue{background:var(--red-dim);color:var(--red)}
 .badge-today{background:var(--orange-dim);color:var(--orange)}
+.badge-quitado{background:#06b6d422;color:#06b6d4;border:1px solid #06b6d433}
 
 /* BUTTONS */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;border-radius:var(--radius-sm);cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;transition:all .15s;border:none;white-space:nowrap}
@@ -313,9 +314,9 @@ textarea{resize:vertical;min-height:80px}
       <div class="page active" id="page-dashboard">
         <div class="stat-grid">
           <div class="stat-card">
-            <div class="stat-label">Faturamento total<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>
+            <div class="stat-label">Recebido (quitado)<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
             <div class="stat-value green" id="stat-faturamento">R$ 0</div>
-            <div class="stat-change">Em aberto: <span id="stat-aberto">R$ 0</span></div>
+            <div class="stat-change" id="stat-aberto">Projetado: R$ 0</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Clientes ativos<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
@@ -483,7 +484,7 @@ Qualquer dúvida, me chama! 🚀</div>
         </div>
 
         <!-- LINK NOTION -->
-        <div style="background:#a78bfa0a;border:1px solid #a78bfa22;border-radius:var(--radius);padding:18px 20px;display:flex;align-items:center;justify-content:space-between">
+        <div style="background:#a78bfa0a;border:1px solid #a78bfa22;border-radius:var(--radius);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
           <div>
             <div style="font-size:13px;font-weight:500;margin-bottom:4px">Editar calendário de conteúdo</div>
             <div style="font-size:12px;color:var(--muted2)">Abre a tabela do Notion onde o time cadastra os conteúdos</div>
@@ -492,6 +493,21 @@ Qualquer dúvida, me chama! 🚀</div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             Abrir no Notion
           </a>
+        </div>
+
+        <!-- LOG DE ENVIOS -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:600">Histórico de envios</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div id="gc-hoje-badge" style="background:#a78bfa22;border:1px solid #a78bfa44;border-radius:20px;padding:3px 12px;font-size:12px;color:#a78bfa;font-weight:600"></div>
+              <button class="btn btn-ghost" style="font-size:12px" onclick="carregarLogGC()">↻ Atualizar</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Cliente</th><th>Tipo</th><th>Tema</th><th>Enviado em</th></tr></thead>
+            <tbody id="tbody-gc-log"><tr><td colspan="4" class="empty">Carregando...</td></tr></tbody>
+          </table>
         </div>
       </div>
 
@@ -558,6 +574,7 @@ Qualquer dúvida, me chama! 🚀</div>
       <div class="field"><label>Cargo</label><input type="text" id="nc-cargo" placeholder="CEO, Designer..."></div>
     </div>
     <div class="field"><label>Link Google Drive</label><input type="url" id="nc-drive" placeholder="https://drive.google.com/drive/folders/..."></div>
+    <div class="field"><label>Valor do projeto (R$)</label><input type="number" id="nc-valor-projeto" placeholder="0.00"></div>
     <div class="field"><label>Notas internas</label><textarea id="nc-notas" placeholder="Observações, preferências..."></textarea></div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="fecharModal('modal-novo-cliente')">Cancelar</button>
@@ -579,6 +596,7 @@ Qualquer dúvida, me chama! 🚀</div>
       <div class="field"><label>Cargo</label><input type="text" id="ec-cargo"></div>
     </div>
     <div class="field"><label>Link Google Drive</label><input type="url" id="ec-drive" placeholder="https://drive.google.com/drive/folders/..."></div>
+    <div class="field"><label>Valor do projeto (R$)</label><input type="number" id="ec-valor-projeto" placeholder="0.00"></div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="fecharModal('modal-editar-cliente')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarEdicaoCliente()">Salvar</button>
@@ -723,6 +741,7 @@ window.showPage = function(id) {
   if(id==='dashboard') carregarDashboard();
   if(id==='clientes') carregarClientes();
   if(id==='cobrancas') carregarCobrancas();
+  if(id==='groundcontrol') carregarLogGC();
   if(id==='nova') carregarClientesSelect();
 };
 
@@ -781,15 +800,18 @@ async function carregarDashboard() {
   if(!parcelas) return;
   const hj=hoje();
   const total=parcelas.reduce((a,p)=>a+parseFloat(p.valor||0),0);
-  const pendentes=parcelas.filter(p=>!p.enviada);
-  const enviadas=parcelas.filter(p=>p.enviada);
-  const venceHoje=parcelas.filter(p=>p.data_vencimento===hj&&!p.enviada);
-  const vencidas=parcelas.filter(p=>p.data_vencimento<hj&&!p.enviada);
+  const quitadas=parcelas.filter(p=>p.quitado);
+  const pendentes=parcelas.filter(p=>!p.enviada&&!p.quitado);
+  const enviadas=parcelas.filter(p=>p.enviada&&!p.quitado);
+  const venceHoje=parcelas.filter(p=>p.data_vencimento===hj&&!p.enviada&&!p.quitado);
+  const vencidas=parcelas.filter(p=>p.data_vencimento<hj&&!p.enviada&&!p.quitado);
   const aberto=pendentes.reduce((a,p)=>a+parseFloat(p.valor||0),0);
+  const recebido=quitadas.reduce((a,p)=>a+parseFloat(p.valor||0),0);
+  const projetado=(clientes||[]).reduce((a,c)=>a+parseFloat(c.valor_projeto||0),0);
   const comDrive=(clientes||[]).filter(c=>c.drive_url).length;
 
-  document.getElementById('stat-faturamento').textContent=fmtBRL(total);
-  document.getElementById('stat-aberto').textContent=fmtBRL(aberto);
+  document.getElementById('stat-faturamento').textContent=fmtBRL(recebido);
+  document.getElementById('stat-aberto').textContent='Projetado: '+fmtBRL(projetado);
   document.getElementById('stat-clientes').textContent=(clientes||[]).length;
   document.getElementById('stat-clientes-drive').textContent=comDrive+' com Drive linkado';
   document.getElementById('stat-hoje').textContent=venceHoje.length;
@@ -874,7 +896,7 @@ async function abrirPerfil(clienteId) {
   document.getElementById('perfil-tags').innerHTML=tags;
 
   document.getElementById('perfil-actions').innerHTML=`
-    <button class="btn btn-outline" onclick="abrirEditarCliente('${c.id}','${c.nome}','${c.telefone||''}','${c.empresa||''}','${c.cargo||''}','${c.drive_url||''}')">✎ Editar</button>
+    <button class="btn btn-outline" onclick="abrirEditarCliente('${c.id}','${c.nome}','${c.telefone||''}','${c.empresa||''}','${c.cargo||''}','${c.drive_url||''}','${c.valor_projeto||0}')">✎ Editar</button>
     <button class="btn btn-danger" onclick="confirmarExcluirCliente('${c.id}','${c.nome}')">✕</button>`;
 
   const fat=pFiltradas.reduce((a,p)=>a+parseFloat(p.valor||0),0);
@@ -920,10 +942,11 @@ function renderTbody(tbodyId, data, compact, semParcela=false) {
     const nome=cli?.nome||'—';
     const cor=avatarColor(nome);
     const isHoje=p.data_vencimento===hj;
-    const isVencida=p.data_vencimento<hj&&!p.enviada;
-    const badge=p.enviada?'<span class="badge badge-sent">Enviada</span>':isHoje?'<span class="badge badge-today">Hoje</span>':isVencida?'<span class="badge badge-overdue">Vencida</span>':'<span class="badge badge-pending">Pendente</span>';
+    const isVencida=p.data_vencimento<hj&&!p.enviada&&!p.quitado;
+    const badge=p.quitado?'<span class="badge badge-quitado">Quitado</span>':p.enviada?'<span class="badge badge-sent">Enviada</span>':isHoje?'<span class="badge badge-today">Hoje</span>':isVencida?'<span class="badge badge-overdue">Vencida</span>':'<span class="badge badge-pending">Pendente</span>';
     const acoes=`<div class="btn-group">
-      ${!p.enviada?`<button class="btn btn-whatsapp" onclick="enviarAgora('${p.id}','${nome}','${job?.job||''}','${p.numero}','${job?.total_parcelas||1}','${p.valor}','${cli?.telefone||''}','${p.data_vencimento}')">▶ Enviar</button>`:''}
+      ${!p.enviada&&!p.quitado?`<button class="btn btn-whatsapp" onclick="enviarAgora('${p.id}','${nome}','${job?.job||''}','${p.numero}','${job?.total_parcelas||1}','${p.valor}','${cli?.telefone||''}','${p.data_vencimento}')">▶ Enviar</button>`:''}
+      ${!p.quitado?`<button class="btn btn-ghost" style="color:#00c97a;border:1px solid #00c97a33" title="Marcar como quitado" onclick="marcarQuitado('${p.id}','${nome}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg></button>`:'<button class="btn btn-ghost" style="color:var(--muted2)" title="Desmarcar quitado" onclick="desmarcarQuitado(\'${p.id}\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>'}
       <button class="btn btn-ghost" onclick="abrirEditarParcelas('${job?.id}','${job?.job||''}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
       <button class="btn btn-ghost" style="color:var(--red)" onclick="confirmarExcluirCobranca('${job?.id}','${job?.job||''}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
     </div>`;
@@ -972,7 +995,21 @@ async function confirmarEnvio(parcelaId,nome,telefone,msg) {
   finally{document.getElementById('btn-confirmar-envio').textContent='▶ Confirmar envio';}
 }
 
-// EXCLUIR COBRANÇA
+// QUITAR PARCELA
+window.marcarQuitado = async function(parcelaId, nome) {
+  await db.from('parcelas').update({ quitado: true, enviada: true }).eq('id', parcelaId);
+  toast('✓ Marcado como quitado');
+  carregarDashboard();
+  if(document.getElementById('page-cobrancas').classList.contains('active')) carregarCobrancas();
+  if(document.getElementById('page-perfil').classList.contains('active')&&perfilClienteAtual) abrirPerfil(perfilClienteAtual.id);
+};
+window.desmarcarQuitado = async function(parcelaId) {
+  await db.from('parcelas').update({ quitado: false, enviada: false }).eq('id', parcelaId);
+  toast('✓ Quitado removido');
+  carregarDashboard();
+  if(document.getElementById('page-cobrancas').classList.contains('active')) carregarCobrancas();
+  if(document.getElementById('page-perfil').classList.contains('active')&&perfilClienteAtual) abrirPerfil(perfilClienteAtual.id);
+};
 window.confirmarExcluirCobranca = function(cobId,jobNome) {
   document.getElementById('confirm-nome').textContent=jobNome;
   document.getElementById('confirm-texto').textContent='Isso excluirá o job e todas as parcelas. Ação irreversível.';
@@ -1010,7 +1047,7 @@ window.salvarNovoCliente = async function() {
   const nome=document.getElementById('nc-nome').value.trim();
   const fone=document.getElementById('nc-fone').value.trim();
   if(!nome||!fone){toast('Nome e WhatsApp são obrigatórios',true);return;}
-  const {error}=await db.from('clientes').insert({nome,telefone:fone,empresa:document.getElementById('nc-empresa').value.trim(),cargo:document.getElementById('nc-cargo').value.trim(),drive_url:document.getElementById('nc-drive').value.trim(),notas:document.getElementById('nc-notas').value.trim()});
+  const {error}=await db.from('clientes').insert({nome,telefone:fone,empresa:document.getElementById('nc-empresa').value.trim(),cargo:document.getElementById('nc-cargo').value.trim(),drive_url:document.getElementById('nc-drive').value.trim(),valor_projeto:parseFloat(document.getElementById('nc-valor-projeto').value)||0,notas:document.getElementById('nc-notas').value.trim()});
   if(error){toast('Erro: '+error.message,true);return;}
   fecharModal('modal-novo-cliente');toast('Cliente cadastrado!');
   ['nc-nome','nc-fone','nc-empresa','nc-cargo','nc-drive','nc-notas'].forEach(id=>document.getElementById(id).value='');
@@ -1018,20 +1055,21 @@ window.salvarNovoCliente = async function() {
 };
 
 // EDITAR CLIENTE
-window.abrirEditarCliente = function(id,nome,fone,empresa,cargo,drive) {
+window.abrirEditarCliente = function(id,nome,fone,empresa,cargo,drive,valor_projeto) {
   clienteEdit=id;
   document.getElementById('ec-nome').value=nome;
   document.getElementById('ec-fone').value=fone;
   document.getElementById('ec-empresa').value=empresa;
   document.getElementById('ec-cargo').value=cargo;
   document.getElementById('ec-drive').value=drive;
+  document.getElementById('ec-valor-projeto').value=valor_projeto||'';
   abrirModal('modal-editar-cliente');
 };
 window.salvarEdicaoCliente = async function() {
   const nome=document.getElementById('ec-nome').value.trim();
   const fone=document.getElementById('ec-fone').value.trim();
   if(!nome||!fone){toast('Nome e WhatsApp são obrigatórios',true);return;}
-  await db.from('clientes').update({nome,telefone:fone,empresa:document.getElementById('ec-empresa').value.trim(),cargo:document.getElementById('ec-cargo').value.trim(),drive_url:document.getElementById('ec-drive').value.trim()}).eq('id',clienteEdit);
+  await db.from('clientes').update({nome,telefone:fone,empresa:document.getElementById('ec-empresa').value.trim(),cargo:document.getElementById('ec-cargo').value.trim(),drive_url:document.getElementById('ec-drive').value.trim(),valor_projeto:parseFloat(document.getElementById('ec-valor-projeto').value)||0}).eq('id',clienteEdit);
   fecharModal('modal-editar-cliente');toast('Cliente atualizado');
   carregarClientes();
   if(perfilClienteAtual?.id===clienteEdit) abrirPerfil(clienteEdit);
@@ -1101,7 +1139,30 @@ window.salvarCobranca = async function() {
   setTimeout(()=>showPage('dashboard'),800);
 };
 
-// TOGGLES
+// GROUND CONTROL LOG
+async function carregarLogGC() {
+  const {data} = await db.from('ground_control_log').select('*').order('enviado_em',{ascending:false}).limit(50);
+  const tbody = document.getElementById('tbody-gc-log');
+  if(!data?.length){tbody.innerHTML='<tr><td colspan="4" class="empty">Nenhuma mensagem enviada ainda.</td></tr>';document.getElementById('gc-hoje-badge').textContent='0 hoje';return;}
+  const hj=hoje();
+  const hoje_count=data.filter(d=>d.enviado_em?.slice(0,10)===hj).length;
+  document.getElementById('gc-hoje-badge').textContent=hoje_count+' enviado'+(hoje_count!==1?'s':'')+' hoje';
+  tbody.innerHTML=data.map(d=>{
+    const cor=avatarColor(d.cliente_nome||'A');
+    const dt=new Date(d.enviado_em);
+    const isHj=d.enviado_em?.slice(0,10)===hj;
+    return `<tr style="${isHj?'background:#a78bfa08':''}">
+      <td><div class="flex"><div class="avatar" style="background:${cor}20;color:${cor};width:28px;height:28px;border-radius:8px;font-size:10px">${iniciais(d.cliente_nome||'?')}</div><div><div class="name">${d.cliente_nome}</div><div class="sub">${d.telefone||''}</div></div></div></td>
+      <td><span style="background:#a78bfa22;border:1px solid #a78bfa33;border-radius:20px;padding:2px 8px;font-size:11px;color:#a78bfa">${d.tipo||'—'}</span></td>
+      <td style="font-size:12px;color:var(--muted2);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.tema||'—'}</td>
+      <td style="font-size:11px;color:${isHj?'#a78bfa':'var(--muted2)'}">
+        ${isHj?'<strong style="color:#a78bfa">Hoje</strong>, ':dt.toLocaleDateString('pt-BR')+' '}
+        ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+      </td>
+    </tr>`;
+  }).join('');
+}
+window.carregarLogGC = carregarLogGC;
 document.getElementById('toggle-programar').addEventListener('change',function(){
   const row=document.getElementById('toggle-lembrete-row');
   row.style.opacity=this.checked?'1':'0.35';row.style.pointerEvents=this.checked?'auto':'none';
