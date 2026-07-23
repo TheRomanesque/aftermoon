@@ -324,9 +324,9 @@ textarea{resize:vertical;min-height:80px}
             <div class="stat-change" id="stat-clientes-drive">0 com Drive linkado</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Vencendo hoje<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <div class="stat-value yellow" id="stat-hoje">0</div>
-            <div class="stat-change" id="stat-hoje-val">R$ 0 em parcelas</div>
+            <div class="stat-label">Valor total projetos<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="stat-value green" id="stat-hoje">R$ 0</div>
+            <div class="stat-change" id="stat-hoje-val">soma dos projetos ativos</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Valor em aberto<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
@@ -814,8 +814,8 @@ async function carregarDashboard() {
   document.getElementById('stat-aberto').textContent='Projetado: '+fmtBRL(projetado);
   document.getElementById('stat-clientes').textContent=(clientes||[]).length;
   document.getElementById('stat-clientes-drive').textContent=comDrive+' com Drive linkado';
-  document.getElementById('stat-hoje').textContent=venceHoje.length;
-  document.getElementById('stat-hoje-val').textContent=fmtBRL(venceHoje.reduce((a,p)=>a+parseFloat(p.valor||0),0))+' em parcelas';
+  document.getElementById('stat-hoje').textContent=fmtBRL(projetado);
+  document.getElementById('stat-hoje-val').textContent='soma dos projetos ativos';
   document.getElementById('stat-valor-aberto').textContent=fmtBRL(aberto);
   document.getElementById('stat-vencidas-count').textContent=vencidas.length+' vencidas';
 
@@ -859,8 +859,20 @@ async function carregarClientes() {
           Drive</a>`:''}
       </div>
       <div class="cliente-card-footer">
-        <div class="cliente-card-stat"><strong>${fmtBRL(aberto)}</strong>em aberto</div>
-        <div class="cliente-card-stat" style="text-align:right"><strong>${cParc.length}</strong>parcelas</div>
+        <div class="cliente-card-stat">
+          <strong style="font-size:16px;color:var(--accent)">${fmtBRL(c.valor_projeto||0)}</strong>
+          <span style="font-size:11px;color:var(--muted2);display:block;margin-top:1px">valor do projeto</span>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center">
+          <div class="cliente-card-stat" style="text-align:right">
+            <strong style="font-size:13px;color:var(--orange)">${fmtBRL(aberto)}</strong>
+            <span style="font-size:11px;color:var(--muted2);display:block;margin-top:1px">em aberto</span>
+          </div>
+          <div class="cliente-card-stat" style="text-align:right">
+            <strong style="font-size:13px">${cParc.length}</strong>
+            <span style="font-size:11px;color:var(--muted2);display:block;margin-top:1px">parcelas</span>
+          </div>
+        </div>
       </div>
     </div>`;
   }).join('');
