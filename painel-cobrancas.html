@@ -275,7 +275,7 @@ textarea{resize:vertical;min-height:80px}
       Nova cobrança
     </div>
 
-    <div style="padding:14px 12px 6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:500">Plataformas</div>
+    <div class="nav-item" onclick="showPage('faturamento')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>Faturamento</div><div style="padding:14px 12px 6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:500">Plataformas</div>
     <div class="nav-item nav-gc" onclick="showPage('groundcontrol')" style="color:#a78bfa;position:relative">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
       Ground Control
@@ -513,7 +513,7 @@ Qualquer dúvida, me chama! 🚀</div>
         </div>
       </div>
 
-      <!-- NOVA COBRANÇA -->
+      <!-- FATURAMENTO --><div class="page" id="page-faturamento"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><div style="display:flex;gap:8px" id="fat-anos"><button class="btn btn-outline" id="fat-ano-2026" onclick="trocarAnoFaturamento(2026)">2026</button><button class="btn btn-outline" id="fat-ano-2027" onclick="trocarAnoFaturamento(2027)">2027</button></div></div><div class="stat-grid" style="margin-bottom:20px"><div class="stat-card"><div class="stat-label">Recebido</div><div class="stat-value green" id="fat-recebido">R$ 0</div></div><div class="stat-card"><div class="stat-label">A receber</div><div class="stat-value" id="fat-areceber">R$ 0</div></div><div class="stat-card"><div class="stat-label">Projetado</div><div class="stat-value" id="fat-projetado">R$ 0</div></div><div class="stat-card"><div class="stat-label">Vencido</div><div class="stat-value orange" id="fat-vencido">R$ 0</div></div></div><div style="display:flex;gap:16px;align-items:center;margin-bottom:14px;font-size:12px;color:var(--muted)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#00c97a;display:inline-block"></span>Pago</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#f5a623;display:inline-block"></span>Pendente</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#e5484d;display:inline-block"></span>Vencido</span></div><div class="table-card" style="overflow-x:auto"><table><thead><tr id="fat-thead"></tr></thead><tbody id="fat-tbody"></tbody></table></div></div><!-- NOVA COBRANÇA -->
       <div class="page" id="page-nova">
         <div style="margin-bottom:16px"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700">Nova cobrança</div><div style="font-size:12px;color:var(--muted2);margin-top:2px">Cadastre um novo job e suas parcelas</div></div>
         <div class="form-card">
@@ -728,7 +728,7 @@ db.auth.getSession().then(({ data }) => {
 });
 
 // NAVEGAÇÃO
-const TITLES = {dashboard:'Painel',clientes:'Clientes',perfil:'',cobrancas:'Cobranças',nova:'Nova cobrança',groundcontrol:'Ground Control'};
+const TITLES = {dashboard:'Painel',clientes:'Clientes',perfil:'',cobrancas:'Cobranças',nova:'Nova cobrança',groundcontrol:'Ground Control',faturamento:'Faturamento'};
 window.showPage = function(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -737,14 +737,14 @@ window.showPage = function(id) {
   document.getElementById('topbar-back').style.display = id==='perfil' ? 'flex' : 'none';
   document.querySelectorAll('.nav-item').forEach(n=>{
     const t=n.textContent.trim().toLowerCase();
-    if((id==='dashboard'&&t==='painel')||(id==='clientes'&&t==='clientes')||(id==='cobrancas'&&t==='cobranças')||(id==='nova'&&t.includes('nova'))||(id==='groundcontrol'&&t.includes('ground'))) n.classList.add('active');
+    if((id==='dashboard'&&t==='painel')||(id==='clientes'&&t==='clientes')||(id==='cobrancas'&&t==='cobranças')||(id==='nova'&&t.includes('nova'))||(id==='groundcontrol'&&t.includes('ground'))||(id==='faturamento'&&t==='faturamento')) n.classList.add('active');
     if(id==='groundcontrol'&&t.includes('ground')) { n.style.color='#a78bfa'; n.style.background='#a78bfa15'; }
   });
   if(id==='dashboard') carregarDashboard();
   if(id==='clientes') carregarClientes();
   if(id==='cobrancas') carregarCobrancas();
   if(id==='groundcontrol') carregarLogGC();
-  if(id==='nova') carregarClientesSelect();
+  if(id==='nova') carregarClientesSelect();if(id==='faturamento') trocarAnoFaturamento(new Date().getFullYear());
 };
 
 window.voltarDePerfil = () => showPage('clientes');
@@ -840,7 +840,7 @@ async function carregarDashboard() {
   renderTbody('tbody-recentes',parcelas.slice(0,5),true);
 }
 
-// CLIENTES GRID
+async function carregarFaturamento(ano){window.__fatAno=ano;document.getElementById('fat-ano-2026').style.cssText=ano===2026?'background:var(--accent);border-color:var(--accent);color:#fff':'';document.getElementById('fat-ano-2027').style.cssText=ano===2027?'background:var(--accent);border-color:var(--accent);color:#fff':'';const {data:parcelas}=await db.from('parcelas').select('valor,data_vencimento,quitado,cobrancas(clientes(nome))').gte('data_vencimento',ano+'-01-01').lte('data_vencimento',ano+'-12-31').order('data_vencimento');const meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];const thead=document.getElementById('fat-thead');thead.innerHTML='<th>Cliente</th>'+meses.map(m=>'<th style="text-align:center">'+m+'</th>').join('');const hj=hoje();const clientesMap={};let recebido=0,areceber=0,vencido=0;(parcelas||[]).forEach(p=>{const nome=(p.cobrancas&&p.cobrancas.clientes&&p.cobrancas.clientes.nome)||'Sem cliente';const mes=parseInt(p.data_vencimento.slice(5,7),10)-1;const valor=parseFloat(p.valor||0);let status='pendente';if(p.quitado){status='pago';recebido+=valor;}else if(p.data_vencimento<hj){status='vencido';vencido+=valor;}else{areceber+=valor;}if(!clientesMap[nome])clientesMap[nome]=Array(12).fill(null);const atual=clientesMap[nome][mes];if(!atual)clientesMap[nome][mes]={valor:valor,status:status};else{atual.valor+=valor;if(status==='vencido')atual.status='vencido';else if(status==='pendente'&&atual.status==='pago')atual.status='pendente';}});const projetado=recebido+areceber+vencido;document.getElementById('fat-recebido').textContent=fmtBRL(recebido);document.getElementById('fat-areceber').textContent=fmtBRL(areceber);document.getElementById('fat-projetado').textContent=fmtBRL(projetado);document.getElementById('fat-vencido').textContent=fmtBRL(vencido);const bg={pago:'#00c97a22',pendente:'#f5a62322',vencido:'#e5484d22'};const fg={pago:'#00c97a',pendente:'#f5a623',vencido:'#e5484d'};const nomes=Object.keys(clientesMap).sort();const tbody=document.getElementById('fat-tbody');tbody.innerHTML=nomes.length?nomes.map(nome=>{const linha=clientesMap[nome];return '<tr><td>'+nome+'</td>'+linha.map(c=>{if(!c)return '<td style="text-align:center;color:var(--muted2)">—</td>';return '<td style="text-align:center;background:'+bg[c.status]+';color:'+fg[c.status]+';font-weight:600">'+fmtBRL(c.valor)+'</td>';}).join('')+'</tr>';}).join(''):'<tr><td colspan="13" style="text-align:center;color:var(--muted)">Nenhum lançamento em '+ano+'</td></tr>';}window.trocarAnoFaturamento=function(ano){carregarFaturamento(ano);};// CLIENTES GRID
 async function carregarClientes() {
   const {data} = await db.from('clientes').select('*').order('nome');
   const {data:parcelas} = await db.from('parcelas').select('*, cobrancas(cliente_id)');
