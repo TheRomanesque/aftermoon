@@ -637,7 +637,7 @@ textarea{resize:vertical;min-height:80px}
       <button class="btn btn-outline" onclick="baixarModeloGC()">⬇ Baixar modelo .xlsx</button>
       <span style="font-size:11.5px;color:var(--muted2)">as colunas já vêm no lugar certo, é só preencher</span>
     </div>
-    <div id="gc-dropzone" style="border:1.5px dashed var(--border2);border-radius:var(--radius);padding:24px;text-align:center;background:var(--surface2);cursor:pointer" onclick="document.getElementById('gc-file-input').click()">
+    <div id="gc-dropzone" style="border:1.5px dashed var(--border2);border-radius:var(--radius);padding:24px;text-align:center;background:var(--surface2);cursor:pointer" onclick="document.getElementById('gc-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border2)'" ondrop="handleDropGC(event)">
       <div style="font-size:22px;margin-bottom:8px">📄</div>
       <div id="gc-dropzone-texto" style="font-size:13px;font-weight:500">Clique para escolher a planilha .xlsx</div>
       <div style="font-size:11.5px;color:var(--muted2);margin-top:4px">ou arraste o arquivo aqui</div>
@@ -1383,56 +1383,7 @@ function excelDataParaISO(valor){
   return s;
 }
 
-window.lerArquivoGC = function(event){
-  const file = event.target.files[0];
-  if(!file) return;
-  document.getElementById('gc-dropzone-texto').textContent = file.name;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const linhas = XLSX.utils.sheet_to_json(sheet, {defval:''});
-    importPendenteGC = linhas.map(l => {
-      const clienteNome = String(l['Cliente']||'').trim();
-      const match = clientesGC.find(c => c.nome.toLowerCase() === clienteNome.toLowerCase());
-      return {
-        tema: String(l['Tema']||'').trim(),
-        territorio: String(l['Território']||'').trim(),
-        clienteNomeOriginal: clienteNome,
-        cliente_id: match ? match.id : '',
-        data: excelDataParaISO(l['Data']),
-        tipo: String(l['Tipo']||'Stories').trim(),
-        instrucao: String(l['Instrução']||'').trim(),
-      };
-    }).filter(l => l.tema);
-    renderPreviewImportGC();
-  };
-  reader.readAsArrayBuffer(file);
-};
-
-function renderPreviewImportGC(){
-  const tbody = document.getElementById('gc-preview-tbody');
-  const opcoesClientes = c => clientesGC.map(cl=>`<option value="${cl.id}" ${cl.id===c?'selected':''}>${cl.nome}</option>`).join('');
-  tbody.innerHTML = importPendenteGC.map((l,i)=>{
-    const ok = !!l.cliente_id;
-    return `<tr>
-      <td><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${ok?'var(--accent)':'var(--yellow)'}"></span></td>
-      <td style="font-size:12px">${l.tema}</td>
-      <td style="font-size:12px">${l.clienteNomeOriginal}</td>
-      <td style="font-size:12px">${l.data}</td>
-      <td style="font-size:12px">${l.tipo}</td>
-      <td>${ok
-        ? '<span style="color:var(--accent);font-size:11px">✓ cliente encontrado</span>'
-        : `<select style="font-size:11px;padding:4px 6px" onchange="importPendenteGC[${i}].cliente_id=this.value">
-             <option value="">— não encontrado, escolha —</option>${opcoesClientes('')}
-           </select>`
-      }</td>
-    </tr>`;
-  }).join('');
-  document.getElementById('gc-preview-wrap').style.display='block';
-  document.getElementById('btn-gc-confirmar-import').disabled = importPendenteGC.length===0;
-}
-window.importPendenteGC = importPendenteGC; // acessível pro onchange inline acima
+function normalizarLinhaGC(l){const get=(...keys)=>{for(const k of Object.keys(l)){const kn=k.trim().toLowerCase();if(keys.some(x=>x.toLowerCase()===kn))return l[k];}return '';};return {tema:String(get('Tema')||'').trim(),territorio:String(get('Território','Territorio')||'').trim(),cliente:String(get('Cliente')||'').trim(),data:get('Data'),tipo:String(get('Tipo')||'Stories').trim(),instrucao:String(get('Instrução','Instrucao')||'').trim()};}function processarArquivoGC(file){document.getElementById('gc-dropzone-texto').textContent=file.name;const reader=new FileReader();reader.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});const sheet=wb.Sheets[wb.SheetNames[0]];const linhas=XLSX.utils.sheet_to_json(sheet,{defval:''});importPendenteGC=linhas.map(l=>{const n=normalizarLinhaGC(l);const match=clientesGC.find(c=>c.nome.toLowerCase()===n.cliente.toLowerCase());return {tema:n.tema,territorio:n.territorio,clienteNomeOriginal:n.cliente,cliente_id:match?match.id:'',data:excelDataParaISO(n.data),tipo:n.tipo,instrucao:n.instrucao};}).filter(l=>l.tema);if(!importPendenteGC.length){toast('Nenhuma linha reconhecida. Confira se as colunas têm exatamente: Tema, Território, Cliente, Data, Tipo, Instrução', true);}renderPreviewImportGC();}catch(err){toast('Erro ao ler a planilha: '+err.message, true);}};reader.readAsArrayBuffer(file);}window.lerArquivoGC=function(event){const file=event.target.files[0];if(!file)return;processarArquivoGC(file);};window.handleDropGC=function(event){event.preventDefault();document.getElementById('gc-dropzone').style.borderColor='var(--border2)';const file=event.dataTransfer.files[0];if(!file)return;document.getElementById('gc-file-input').value='';processarArquivoGC(file);};window.atualizarClienteImportGC=function(i,val){importPendenteGC[i].cliente_id=val;renderPreviewImportGC();};function renderPreviewImportGC(){const tbody=document.getElementById('gc-preview-tbody');const opcoesClientes=c=>clientesGC.map(cl=>`<option value="${cl.id}" ${cl.id===c?'selected':''}>${cl.nome}</option>`).join('');tbody.innerHTML=importPendenteGC.map((l,i)=>{const ok=!!l.cliente_id;return `<tr><td><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${ok?'var(--accent)':'var(--yellow)'}"></span></td><td style="font-size:12px">${l.tema}</td><td style="font-size:12px">${l.clienteNomeOriginal}</td><td style="font-size:12px">${l.data}</td><td style="font-size:12px">${l.tipo}</td><td>${ok?'<span style="color:var(--accent);font-size:11px">✓ cliente encontrado</span>':`<select style="font-size:11px;padding:4px 6px" onchange="atualizarClienteImportGC(${i},this.value)"><option value="">— não encontrado, escolha —</option>${opcoesClientes('')}</select>`}</td></tr>`;}).join('');document.getElementById('gc-preview-wrap').style.display='block';document.getElementById('btn-gc-confirmar-import').disabled=importPendenteGC.length===0;}
 
 window.confirmarImportacaoGC = async function(){
   const validos = importPendenteGC.filter(l=>l.cliente_id && l.data);
