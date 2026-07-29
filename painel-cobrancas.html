@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aftermoon Orbit — ERP</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.full.min.js"></script>
 <style>
 :root {
   --bg:#0a0b0d;--surface:#111316;--surface2:#161a1f;--border:#1e2328;--border2:#252b33;
@@ -414,102 +415,51 @@ textarea{resize:vertical;min-height:80px}
 
       <!-- GROUND CONTROL -->
       <div class="page" id="page-groundcontrol">
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
-          <div style="width:42px;height:42px;border-radius:12px;background:#a78bfa22;border:1px solid #a78bfa44;display:flex;align-items:center;justify-content:center">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-          </div>
-          <div>
-            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700">Ground Control</div>
-            <div style="font-size:12px;color:var(--muted2);margin-top:2px">Alertas de conteúdo via WhatsApp — integrado ao Notion</div>
-          </div>
-        </div>
-
-        <!-- STATUS CARDS -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px">
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
-            <div style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Status</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <div style="width:8px;height:8px;border-radius:50%;background:#00c97a;box-shadow:0 0 6px #00c97a"></div>
-              <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:600;color:#00c97a">Ativo</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:24px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div style="width:42px;height:42px;border-radius:12px;background:#a78bfa22;border:1px solid #a78bfa44;display:flex;align-items:center;justify-content:center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
             </div>
-            <div style="font-size:11px;color:var(--muted2);margin-top:6px">Disparos às 9h diariamente</div>
-          </div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
-            <div style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Fonte de dados</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/><path d="M4 14h16"/><path d="M9 4v16"/></svg>
-              <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:600">Notion</span>
+            <div>
+              <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700">Ground Control</div>
+              <div style="font-size:12px;color:var(--muted2);margin-top:2px">Calendário de conteúdo dos clientes — envio automático via WhatsApp</div>
             </div>
-            <div style="font-size:11px;color:var(--muted2);margin-top:6px">Ground Control — Aftermoon</div>
           </div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px">
-            <div style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Canal</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-              <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:600;color:#25D366">WhatsApp</span>
-            </div>
-            <div style="font-size:11px;color:var(--muted2);margin-top:6px">aftermoonagency</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost" onclick="abrirHorariosGC()">⏱ Horários por cliente</button>
+            <button class="btn btn-outline" onclick="abrirImportarGC()">＋ Importar em lote</button>
+            <button class="btn btn-primary" onclick="abrirNovoConteudoGC()">＋ Novo conteúdo</button>
           </div>
         </div>
 
-        <!-- COMO FUNCIONA -->
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
-          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:16px">Como funciona</div>
-          <div style="display:flex;flex-direction:column;gap:12px">
-            <div style="display:flex;align-items:flex-start;gap:14px">
-              <div style="width:28px;height:28px;border-radius:8px;background:#a78bfa22;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#a78bfa;font-family:'Syne',sans-serif">1</div>
-              <div><div style="font-size:13px;font-weight:500;margin-bottom:2px">Time cadastra o conteúdo no Notion</div><div style="font-size:12px;color:var(--muted2)">Preenche: Cliente, Data, Tipo (Stories/Feed/Reels), Tema e Instrução</div></div>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:14px">
-              <div style="width:28px;height:28px;border-radius:8px;background:#a78bfa22;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#a78bfa;font-family:'Syne',sans-serif">2</div>
-              <div><div style="font-size:13px;font-weight:500;margin-bottom:2px">Todo dia às 9h o sistema verifica o Notion</div><div style="font-size:12px;color:var(--muted2)">Busca todos os conteúdos com a data de hoje e status diferente de "Enviado"</div></div>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:14px">
-              <div style="width:28px;height:28px;border-radius:8px;background:#a78bfa22;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#a78bfa;font-family:'Syne',sans-serif">3</div>
-              <div><div style="font-size:13px;font-weight:500;margin-bottom:2px">Mensagem personalizada enviada ao cliente</div><div style="font-size:12px;color:var(--muted2)">O sistema busca o telefone no Orbit e dispara via WhatsApp automaticamente</div></div>
-            </div>
-            <div style="display:flex;align-items:flex-start;gap:14px">
-              <div style="width:28px;height:28px;border-radius:8px;background:#00c97a22;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#00c97a;font-family:'Syne',sans-serif">✓</div>
-              <div><div style="font-size:13px;font-weight:500;margin-bottom:2px">Status atualizado automaticamente no Notion</div><div style="font-size:12px;color:var(--muted2)">A linha muda para "Enviado" para evitar duplicações</div></div>
-            </div>
+        <!-- TABS -->
+        <div style="display:flex;gap:22px;border-bottom:1px solid var(--border);margin-bottom:18px">
+          <div class="gc-tab active" id="gc-tab-agendados" onclick="mostrarAbaGC('agendados')" style="padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid #a78bfa;font-weight:600;display:flex;align-items:center;gap:7px">Agendados <span id="gc-count-agendados" style="background:#a78bfa22;color:#a78bfa;font-size:10.5px;padding:1px 7px;border-radius:10px">0</span></div>
+          <div class="gc-tab" id="gc-tab-historico" onclick="mostrarAbaGC('historico')" style="padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600;display:flex;align-items:center;gap:7px">Histórico de envios <span id="gc-count-historico" style="background:var(--surface2);color:var(--muted2);font-size:10.5px;padding:1px 7px;border-radius:10px">0</span></div>
+        </div>
+
+        <!-- PANE: AGENDADOS -->
+        <div id="gc-pane-agendados">
+          <div class="table-card">
+            <table>
+              <thead><tr><th>Data</th><th>Cliente</th><th>Conteúdo</th><th>Tipo</th><th>Status</th><th></th></tr></thead>
+              <tbody id="tbody-gc-agendados"><tr><td colspan="6" class="empty">Carregando...</td></tr></tbody>
+            </table>
           </div>
         </div>
 
-        <!-- EXEMPLO DE MENSAGEM -->
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
-          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:14px">Exemplo de mensagem enviada</div>
-          <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:16px;font-size:13px;line-height:1.8;border-left:3px solid #25D366;white-space:pre-wrap;color:var(--text)">Bom dia, Dr. Heres! 🎥
-
-Hoje é dia de <strong>Stories</strong>: "3 hábitos de sono que mudam seu humor" — só você falando pra câmera, ~30s.
-
-Qualquer dúvida, me chama! 🚀</div>
-        </div>
-
-        <!-- LINK NOTION -->
-        <div style="background:#a78bfa0a;border:1px solid #a78bfa22;border-radius:var(--radius);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <div>
-            <div style="font-size:13px;font-weight:500;margin-bottom:4px">Editar calendário de conteúdo</div>
-            <div style="font-size:12px;color:var(--muted2)">Abre a tabela do Notion onde o time cadastra os conteúdos</div>
-          </div>
-          <a href="https://app.notion.com/p/6e16239725d64cda85cfc23cdcb37595" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:#a78bfa;color:#000;border-radius:var(--radius-sm);font-size:13px;font-weight:600;text-decoration:none;font-family:'Syne',sans-serif;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            Abrir no Notion
-          </a>
-        </div>
-
-        <!-- LOG DE ENVIOS -->
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
-          <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:600">Histórico de envios</div>
-            <div style="display:flex;gap:8px;align-items:center">
+        <!-- PANE: HISTÓRICO -->
+        <div id="gc-pane-historico" style="display:none">
+          <div class="table-card">
+            <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
               <div id="gc-hoje-badge" style="background:#a78bfa22;border:1px solid #a78bfa44;border-radius:20px;padding:3px 12px;font-size:12px;color:#a78bfa;font-weight:600"></div>
               <button class="btn btn-ghost" style="font-size:12px" onclick="carregarLogGC()">↻ Atualizar</button>
             </div>
+            <table>
+              <thead><tr><th>Cliente</th><th>Tipo</th><th>Tema</th><th>Enviado em</th></tr></thead>
+              <tbody id="tbody-gc-log"><tr><td colspan="4" class="empty">Carregando...</td></tr></tbody>
+            </table>
           </div>
-          <table>
-            <thead><tr><th>Cliente</th><th>Tipo</th><th>Tema</th><th>Enviado em</th></tr></thead>
-            <tbody id="tbody-gc-log"><tr><td colspan="4" class="empty">Carregando...</td></tr></tbody>
-          </table>
         </div>
       </div>
 
@@ -649,6 +599,76 @@ Qualquer dúvida, me chama! 🚀</div>
   </div>
 </div>
 
+<!-- GROUND CONTROL: NOVO CONTEÚDO -->
+<div class="modal-bg" id="modal-gc-novo">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Novo conteúdo</div><button class="modal-close" onclick="fecharModal('modal-gc-novo')">✕</button></div>
+    <input type="hidden" id="gc-novo-id">
+    <div class="field"><label>Cliente</label>
+      <select id="gc-novo-cliente"><option value="">Selecione o cliente</option></select>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Data</label><input type="date" id="gc-novo-data"></div>
+      <div class="field"><label>Tipo</label>
+        <select id="gc-novo-tipo"><option>Stories</option><option>Feed</option><option>Reels</option><option>Vídeo</option></select>
+      </div>
+    </div>
+    <div class="field"><label>Tema</label><input type="text" id="gc-novo-tema" placeholder='Ex: "Protocolo SOMA em 60 segundos"'></div>
+    <div class="field"><label>Território</label><input type="text" id="gc-novo-territorio" placeholder="Ex: Conexão"></div>
+    <div class="field"><label>Instrução (nota de produção — sem saudação, sem sign-off)</label>
+      <textarea id="gc-novo-instrucao" placeholder="Ex: Gravar em vertical, luz natural..."></textarea>
+    </div>
+    <div class="field"><label>Pré-visualização da mensagem</label>
+      <div class="msg-preview-box" id="gc-novo-preview" style="min-height:60px">Preencha os campos acima para ver a prévia.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-gc-novo')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-gc-salvar" onclick="salvarConteudoGC()">Salvar como Agendado</button>
+    </div>
+  </div>
+</div>
+
+<!-- GROUND CONTROL: IMPORTAR EM LOTE (EXCEL) -->
+<div class="modal-bg" id="modal-gc-import">
+  <div class="modal" style="width:720px">
+    <div class="modal-header"><div class="modal-title">Importar em lote (Excel)</div><button class="modal-close" onclick="fecharModal('modal-gc-import')">✕</button></div>
+    <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">Colunas na planilha, nessa ordem: <strong style="color:var(--text)">Tema · Território · Cliente · Data · Tipo · Instrução</strong>.</p>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
+      <button class="btn btn-outline" onclick="baixarModeloGC()">⬇ Baixar modelo .xlsx</button>
+      <span style="font-size:11.5px;color:var(--muted2)">as colunas já vêm no lugar certo, é só preencher</span>
+    </div>
+    <div id="gc-dropzone" style="border:1.5px dashed var(--border2);border-radius:var(--radius);padding:24px;text-align:center;background:var(--surface2);cursor:pointer" onclick="document.getElementById('gc-file-input').click()">
+      <div style="font-size:22px;margin-bottom:8px">📄</div>
+      <div id="gc-dropzone-texto" style="font-size:13px;font-weight:500">Clique para escolher a planilha .xlsx</div>
+      <div style="font-size:11.5px;color:var(--muted2);margin-top:4px">ou arraste o arquivo aqui</div>
+    </div>
+    <input type="file" id="gc-file-input" accept=".xlsx,.xls" style="display:none" onchange="lerArquivoGC(event)">
+    <div id="gc-preview-wrap" style="display:none;margin-top:18px">
+      <table>
+        <thead><tr><th></th><th>Tema</th><th>Cliente</th><th>Data</th><th>Tipo</th><th>Match</th></tr></thead>
+        <tbody id="gc-preview-tbody"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-gc-import')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-gc-confirmar-import" onclick="confirmarImportacaoGC()" disabled>Confirmar importação</button>
+    </div>
+  </div>
+</div>
+
+<!-- GROUND CONTROL: HORÁRIOS POR CLIENTE -->
+<div class="modal-bg" id="modal-gc-horarios">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Horário de envio por cliente</div><button class="modal-close" onclick="fecharModal('modal-gc-horarios')">✕</button></div>
+    <p style="font-size:12px;color:var(--muted2);margin-bottom:16px">Padrão: <strong style="color:var(--text)">08:08 · America/Sao_Paulo</strong>. Ative horário próprio só pra quem está em outro fuso.</p>
+    <div id="gc-horarios-lista">Carregando...</div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-gc-horarios')">Fechar</button>
+      <button class="btn btn-primary" onclick="salvarHorariosGC()">Salvar horários</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -743,7 +763,7 @@ window.showPage = function(id) {
   if(id==='dashboard') carregarDashboard();
   if(id==='clientes') carregarClientes();
   if(id==='cobrancas') carregarCobrancas();
-  if(id==='groundcontrol') carregarLogGC();
+  if(id==='groundcontrol') { carregarClientesGC().then(carregarAgendadosGC); carregarLogGC(); }
   if(id==='nova') carregarClientesSelect();if(id==='faturamento') trocarAnoFaturamento(new Date().getFullYear());
 };
 
@@ -1153,9 +1173,57 @@ window.salvarCobranca = async function() {
   setTimeout(()=>showPage('dashboard'),800);
 };
 
-// GROUND CONTROL LOG
+// ============================================================
+// GROUND CONTROL — 100% Supabase (substituiu o Notion)
+// ============================================================
+
+let clientesGC = []; // cache de clientes pro dropdown e pro match do import
+
+async function carregarClientesGC() {
+  const {data} = await db.from('clientes').select('id,nome,telefone').order('nome');
+  clientesGC = data || [];
+  const sel = document.getElementById('gc-novo-cliente');
+  sel.innerHTML = '<option value="">Selecione o cliente</option>' + clientesGC.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+}
+
+window.mostrarAbaGC = function(aba) {
+  document.getElementById('gc-pane-agendados').style.display = aba==='agendados' ? 'block' : 'none';
+  document.getElementById('gc-pane-historico').style.display = aba==='historico' ? 'block' : 'none';
+  document.getElementById('gc-tab-agendados').style.cssText = aba==='agendados' ? 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid #a78bfa;font-weight:600;display:flex;align-items:center;gap:7px' : 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600;display:flex;align-items:center;gap:7px';
+  document.getElementById('gc-tab-historico').style.cssText = aba==='historico' ? 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid #a78bfa;font-weight:600;display:flex;align-items:center;gap:7px' : 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600;display:flex;align-items:center;gap:7px';
+  if(aba==='historico') carregarLogGC();
+};
+
+const STATUS_BADGE_GC = { Agendado:'badge-pending', Enviando:'badge-today', Enviado:'badge-sent', Falhou:'badge-overdue', Cancelado:'badge-overdue' };
+
+async function carregarAgendadosGC() {
+  const {data} = await db.from('ground_control_conteudo').select('*, clientes(nome,telefone)').neq('status','Enviado').neq('status','Cancelado').order('data');
+  const tbody = document.getElementById('tbody-gc-agendados');
+  document.getElementById('gc-count-agendados').textContent = data?.length || 0;
+  if(!data?.length){ tbody.innerHTML='<tr><td colspan="6" class="empty">Nada agendado por enquanto.</td></tr>'; return; }
+  tbody.innerHTML = data.map(item=>{
+    const nome = item.clientes?.nome || '— cliente removido —';
+    const cor = avatarColor(nome);
+    const badge = STATUS_BADGE_GC[item.status] || 'badge-pending';
+    return `<tr>
+      <td style="font-size:12px">${fmtData(item.data)}</td>
+      <td><div class="flex"><div class="avatar" style="background:${cor}20;color:${cor};width:28px;height:28px;border-radius:8px;font-size:10px">${iniciais(nome)}</div><div class="name">${nome}</div></div></td>
+      <td><div class="name" style="font-size:12.5px">${item.tema}</div><div class="sub">${item.territorio?('Território: '+item.territorio):''}</div></td>
+      <td><span style="background:#a78bfa22;border:1px solid #a78bfa33;border-radius:20px;padding:2px 8px;font-size:11px;color:#a78bfa">${item.tipo}</span></td>
+      <td><span class="badge ${badge}">${item.status}</span></td>
+      <td><div class="btn-group">
+        <button class="btn btn-ghost" style="padding:5px 8px" title="Editar" onclick='abrirEditarConteudoGC(${JSON.stringify(item).replace(/'/g,"&#39;")})'>✎</button>
+        <button class="btn btn-ghost" style="padding:5px 8px" title="Enviar agora" onclick="enviarConteudoAgoraGC('${item.id}')">▶</button>
+        <button class="btn btn-danger" style="padding:5px 8px" title="Cancelar" onclick="cancelarConteudoGC('${item.id}','${nome.replace(/'/g,"")}')">✕</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// GROUND CONTROL LOG (histórico)
 async function carregarLogGC() {
   const {data} = await db.from('ground_control_log').select('*').order('enviado_em',{ascending:false}).limit(50);
+  document.getElementById('gc-count-historico').textContent = data?.length || 0;
   const tbody = document.getElementById('tbody-gc-log');
   if(!data?.length){tbody.innerHTML='<tr><td colspan="4" class="empty">Nenhuma mensagem enviada ainda.</td></tr>';document.getElementById('gc-hoje-badge').textContent='0 hoje';return;}
   const hj=hoje();
@@ -1177,6 +1245,253 @@ async function carregarLogGC() {
   }).join('');
 }
 window.carregarLogGC = carregarLogGC;
+
+// NOVO CONTEÚDO
+function montarPreviewGC(){
+  const cliId = document.getElementById('gc-novo-cliente').value;
+  const cliente = clientesGC.find(c=>c.id===cliId);
+  const tema = document.getElementById('gc-novo-tema').value.trim();
+  const territorio = document.getElementById('gc-novo-territorio').value.trim();
+  const tipo = document.getElementById('gc-novo-tipo').value;
+  const instrucao = document.getElementById('gc-novo-instrucao').value.trim();
+  if(!cliente || !tema){ document.getElementById('gc-novo-preview').textContent='Preencha os campos acima para ver a prévia.'; return; }
+  const primeiroNome = cliente.nome.split(' ')[0];
+  const msg = `Bom dia, ${primeiroNome}! \n\n🎥 Hoje é dia de gravar: *"${tema}"*${territorio?` — Território: ${territorio}`:''}.\n\n${instrucao}\n\n📲 Postar onde? *${tipo}*\n\nQualquer dúvida, me chama! 🚀`;
+  document.getElementById('gc-novo-preview').textContent = msg;
+}
+['gc-novo-cliente','gc-novo-tema','gc-novo-territorio','gc-novo-tipo','gc-novo-instrucao'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', montarPreviewGC);
+  document.getElementById(id).addEventListener('change', montarPreviewGC);
+});
+
+window.abrirNovoConteudoGC = function(){
+  document.getElementById('gc-novo-id').value='';
+  document.getElementById('gc-novo-cliente').value='';
+  document.getElementById('gc-novo-data').value=hoje();
+  document.getElementById('gc-novo-tipo').value='Stories';
+  document.getElementById('gc-novo-tema').value='';
+  document.getElementById('gc-novo-territorio').value='';
+  document.getElementById('gc-novo-instrucao').value='';
+  document.getElementById('gc-novo-preview').textContent='Preencha os campos acima para ver a prévia.';
+  document.getElementById('btn-gc-salvar').textContent='Salvar como Agendado';
+  abrirModal('modal-gc-novo');
+};
+
+window.abrirEditarConteudoGC = function(item){
+  document.getElementById('gc-novo-id').value=item.id;
+  document.getElementById('gc-novo-cliente').value=item.cliente_id;
+  document.getElementById('gc-novo-data').value=item.data;
+  document.getElementById('gc-novo-tipo').value=item.tipo;
+  document.getElementById('gc-novo-tema').value=item.tema;
+  document.getElementById('gc-novo-territorio').value=item.territorio||'';
+  document.getElementById('gc-novo-instrucao').value=item.instrucao||'';
+  document.getElementById('btn-gc-salvar').textContent='Salvar alterações';
+  montarPreviewGC();
+  abrirModal('modal-gc-novo');
+};
+
+window.salvarConteudoGC = async function(){
+  const id = document.getElementById('gc-novo-id').value;
+  const cliente_id = document.getElementById('gc-novo-cliente').value;
+  const data_ = document.getElementById('gc-novo-data').value;
+  const tipo = document.getElementById('gc-novo-tipo').value;
+  const tema = document.getElementById('gc-novo-tema').value.trim();
+  const territorio = document.getElementById('gc-novo-territorio').value.trim();
+  const instrucao = document.getElementById('gc-novo-instrucao').value.trim();
+  if(!cliente_id || !data_ || !tema){ toast('Preencha cliente, data e tema', true); return; }
+  const payload = { cliente_id, data:data_, tipo, tema, territorio, instrucao };
+  const {error} = id
+    ? await db.from('ground_control_conteudo').update(payload).eq('id', id)
+    : await db.from('ground_control_conteudo').insert({...payload, status:'Agendado'});
+  if(error){ toast('Erro: '+error.message, true); return; }
+  fecharModal('modal-gc-novo');
+  toast(id ? 'Conteúdo atualizado' : 'Conteúdo agendado');
+  carregarAgendadosGC();
+};
+
+window.cancelarConteudoGC = function(id, nome){
+  document.getElementById('confirm-nome').textContent = nome;
+  document.getElementById('confirm-texto').textContent = 'Isso cancela o envio desse conteúdo. Pode reagendar depois se precisar.';
+  document.getElementById('btn-confirmar-excluir').onclick = async ()=>{
+    await db.from('ground_control_conteudo').update({status:'Cancelado'}).eq('id', id);
+    fecharModal('modal-confirmar'); toast('Conteúdo cancelado'); carregarAgendadosGC();
+  };
+  abrirModal('modal-confirmar');
+};
+
+window.enviarConteudoAgoraGC = function(id){
+  db.from('ground_control_conteudo').select('*, clientes(nome,telefone)').eq('id', id).single().then(({data:item})=>{
+    if(!item || !item.clientes){ toast('Cliente não encontrado para esse item', true); return; }
+    const cliente = item.clientes;
+    const primeiroNome = cliente.nome.split(' ')[0];
+    const msg = `Bom dia, ${primeiroNome}! \n\n🎥 Hoje é dia de gravar: *"${item.tema}"*${item.territorio?` — Território: ${item.territorio}`:''}.\n\n${item.instrucao||''}\n\n📲 Postar onde? *${item.tipo}*\n\nQualquer dúvida, me chama! 🚀`;
+    const cor = avatarColor(cliente.nome);
+    const av = document.getElementById('preview-avatar');
+    av.style.background=cor+'20'; av.style.color=cor; av.textContent=iniciais(cliente.nome);
+    document.getElementById('preview-nome-dest').textContent = cliente.nome;
+    document.getElementById('preview-fone-dest').textContent = cliente.telefone;
+    document.getElementById('preview-msg-box').textContent = msg;
+    document.getElementById('btn-confirmar-envio').onclick = ()=>confirmarEnvioConteudoGC(item.id, cliente, item.tipo, item.tema, msg);
+    abrirModal('modal-preview-envio');
+  });
+};
+
+async function confirmarEnvioConteudoGC(id, cliente, tipo, tema, msg){
+  document.getElementById('btn-confirmar-envio').textContent='Enviando...';
+  try {
+    const res = await fetch(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`,{method:'POST',headers:{'Content-Type':'application/json','apikey':EVOLUTION_KEY},body:JSON.stringify({number:cliente.telefone,text:msg})});
+    if(!res.ok) throw new Error('Erro '+res.status);
+    await db.from('ground_control_conteudo').update({status:'Enviado', enviado_em:new Date().toISOString()}).eq('id', id);
+    await db.from('ground_control_log').insert({cliente_nome:cliente.nome, tipo, tema, telefone:cliente.telefone});
+    fecharModal('modal-preview-envio');
+    toast('Mensagem enviada para '+cliente.nome);
+    carregarAgendadosGC();
+  } catch(e){ toast('Erro: '+e.message, true); }
+  finally { document.getElementById('btn-confirmar-envio').textContent='▶ Confirmar envio'; }
+}
+
+// IMPORTAR EM LOTE (EXCEL)
+let importPendenteGC = [];
+
+window.abrirImportarGC = function(){
+  document.getElementById('gc-file-input').value='';
+  document.getElementById('gc-preview-wrap').style.display='none';
+  document.getElementById('gc-dropzone-texto').textContent='Clique para escolher a planilha .xlsx';
+  document.getElementById('btn-gc-confirmar-import').disabled=true;
+  importPendenteGC=[];
+  abrirModal('modal-gc-import');
+};
+
+window.baixarModeloGC = function(){
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['Tema','Território','Cliente','Data','Tipo','Instrução'],
+    ['"Protocolo SOMA em 60 segundos"','Conexão','Nome do cliente','2026-08-01','Feed','Gravar em vertical, luz natural']
+  ]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Ground Control');
+  XLSX.writeFile(wb, 'modelo-ground-control.xlsx');
+};
+
+function excelDataParaISO(valor){
+  if(!valor) return '';
+  if(valor instanceof Date) return valor.toISOString().split('T')[0];
+  const s = String(valor).trim();
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(br) return `${br[3]}-${br[2]}-${br[1]}`;
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso) return iso[0];
+  return s;
+}
+
+window.lerArquivoGC = function(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  document.getElementById('gc-dropzone-texto').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const linhas = XLSX.utils.sheet_to_json(sheet, {defval:''});
+    importPendenteGC = linhas.map(l => {
+      const clienteNome = String(l['Cliente']||'').trim();
+      const match = clientesGC.find(c => c.nome.toLowerCase() === clienteNome.toLowerCase());
+      return {
+        tema: String(l['Tema']||'').trim(),
+        territorio: String(l['Território']||'').trim(),
+        clienteNomeOriginal: clienteNome,
+        cliente_id: match ? match.id : '',
+        data: excelDataParaISO(l['Data']),
+        tipo: String(l['Tipo']||'Stories').trim(),
+        instrucao: String(l['Instrução']||'').trim(),
+      };
+    }).filter(l => l.tema);
+    renderPreviewImportGC();
+  };
+  reader.readAsArrayBuffer(file);
+};
+
+function renderPreviewImportGC(){
+  const tbody = document.getElementById('gc-preview-tbody');
+  const opcoesClientes = c => clientesGC.map(cl=>`<option value="${cl.id}" ${cl.id===c?'selected':''}>${cl.nome}</option>`).join('');
+  tbody.innerHTML = importPendenteGC.map((l,i)=>{
+    const ok = !!l.cliente_id;
+    return `<tr>
+      <td><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${ok?'var(--accent)':'var(--yellow)'}"></span></td>
+      <td style="font-size:12px">${l.tema}</td>
+      <td style="font-size:12px">${l.clienteNomeOriginal}</td>
+      <td style="font-size:12px">${l.data}</td>
+      <td style="font-size:12px">${l.tipo}</td>
+      <td>${ok
+        ? '<span style="color:var(--accent);font-size:11px">✓ cliente encontrado</span>'
+        : `<select style="font-size:11px;padding:4px 6px" onchange="importPendenteGC[${i}].cliente_id=this.value">
+             <option value="">— não encontrado, escolha —</option>${opcoesClientes('')}
+           </select>`
+      }</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('gc-preview-wrap').style.display='block';
+  document.getElementById('btn-gc-confirmar-import').disabled = importPendenteGC.length===0;
+}
+window.importPendenteGC = importPendenteGC; // acessível pro onchange inline acima
+
+window.confirmarImportacaoGC = async function(){
+  const validos = importPendenteGC.filter(l=>l.cliente_id && l.data);
+  if(!validos.length){ toast('Nenhuma linha pronta pra importar — confirme o cliente de cada linha', true); return; }
+  const btn = document.getElementById('btn-gc-confirmar-import');
+  btn.disabled=true; btn.textContent='Importando...';
+  const payload = validos.map(l=>({cliente_id:l.cliente_id, data:l.data, tipo:l.tipo, tema:l.tema, territorio:l.territorio, instrucao:l.instrucao, status:'Agendado'}));
+  const {error} = await db.from('ground_control_conteudo').insert(payload);
+  btn.disabled=false; btn.textContent='Confirmar importação';
+  if(error){ toast('Erro: '+error.message, true); return; }
+  fecharModal('modal-gc-import');
+  toast(validos.length+' conteúdo(s) importado(s)');
+  carregarAgendadosGC();
+};
+
+// HORÁRIOS POR CLIENTE
+window.abrirHorariosGC = async function(){
+  abrirModal('modal-gc-horarios');
+  const {data: configs} = await db.from('ground_control').select('*');
+  const configPorCliente = Object.fromEntries((configs||[]).map(c=>[c.cliente_id,c]));
+  const lista = document.getElementById('gc-horarios-lista');
+  lista.innerHTML = clientesGC.map(c=>{
+    const cfg = configPorCliente[c.id];
+    const ativo = cfg?.horario_proprio || false;
+    const horario = cfg?.horario_envio?.slice(0,5) || '08:08';
+    const tz = cfg?.timezone || 'America/Sao_Paulo';
+    return `<div class="toggle-row" data-cliente="${c.id}" style="padding:12px 0">
+      <div class="toggle-info"><div class="toggle-label">${c.nome}</div><div class="toggle-desc gc-sub">${ativo?'horário próprio ativo':'usando padrão'}</div></div>
+      <input type="time" class="gc-horario-input" value="${horario}" ${ativo?'':'disabled'} style="width:90px;margin-right:8px">
+      <select class="gc-tz-input" ${ativo?'':'disabled'} style="width:180px;margin-right:12px">
+        ${['America/Sao_Paulo','Asia/Tashkent','Europe/Tbilisi','Europe/Lisbon','America/New_York'].map(z=>`<option value="${z}" ${z===tz?'selected':''}>${z}</option>`).join('')}
+      </select>
+      <label class="toggle-switch"><input type="checkbox" class="gc-toggle-input" ${ativo?'checked':''} onchange="alternarHorarioGC(this)"><span class="toggle-track"></span><span class="toggle-thumb"></span></label>
+    </div>`;
+  }).join('') || '<p style="font-size:12px;color:var(--muted2)">Nenhum cliente cadastrado ainda.</p>';
+};
+
+window.alternarHorarioGC = function(checkbox){
+  const row = checkbox.closest('.toggle-row');
+  const ativo = checkbox.checked;
+  row.querySelector('.gc-horario-input').disabled = !ativo;
+  row.querySelector('.gc-tz-input').disabled = !ativo;
+  row.querySelector('.gc-sub').textContent = ativo ? 'horário próprio ativo' : 'usando padrão';
+};
+
+window.salvarHorariosGC = async function(){
+  const rows = document.querySelectorAll('#gc-horarios-lista .toggle-row');
+  const payload = Array.from(rows).map(row=>({
+    cliente_id: row.dataset.cliente,
+    horario_proprio: row.querySelector('.gc-toggle-input').checked,
+    horario_envio: row.querySelector('.gc-horario-input').value || '08:08',
+    timezone: row.querySelector('.gc-tz-input').value,
+  }));
+  const {error} = await db.from('ground_control').upsert(payload, {onConflict:'cliente_id'});
+  if(error){ toast('Erro: '+error.message, true); return; }
+  fecharModal('modal-gc-horarios');
+  toast('Horários salvos');
+  carregarAgendadosGC();
+};
 document.getElementById('toggle-programar').addEventListener('change',function(){
   const row=document.getElementById('toggle-lembrete-row');
   row.style.opacity=this.checked?'1':'0.35';row.style.pointerEvents=this.checked?'auto':'none';

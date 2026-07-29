@@ -4,7 +4,6 @@ const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
 const axios = require('axios');
-const { Client } = require('@notionhq/client');
 
 const PORT = process.env.PORT || 8080;
 
@@ -13,11 +12,43 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const EVOLUTION_URL = 'https://evolution-api-production-b358.up.railway.app';
 const EVOLUTION_KEY = '0031e900630b589d7fd542acbfb6c9818063014312db4944a726b600afe98145';
 const EVOLUTION_INSTANCE = 'aftermoonagency';
-const NOTION_TOKEN = 'ntn_J223093786127UCm1ZN1c2VwnNgWB1szb0pMQ3qRoPBdpT';
-const NOTION_DB_ID = '6e16239725d64cda85cfc23cdcb37595';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-const notion = new Client({ auth: NOTION_TOKEN });
+
+// Horário/fuso padrão para clientes sem configuração própria em `ground_control`
+const HORARIO_PADRAO = '08:08';
+const TIMEZONE_PADRAO = 'America/Sao_Paulo';
+
+// Retorna a data (YYYY-MM-DD) e a hora (HH:MM) "agora" no fuso informado,
+// usando o Intl nativo do Node — sem precisar de nenhuma lib nova.
+function agoraNoFuso(timezone) {
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false
+  });
+  const partes = Object.fromEntries(fmt.formatToParts(new Date()).map(p => [p.type, p.value]));
+  return { data: `${partes.year}-${partes.month}-${partes.day}`, hora: `${partes.hour}:${partes.minute}` };
+}
+
+// Confirma entrega real da mensagem via Evolution API (DELIVERY_ACK/READ)
+// antes de marcar como "Enviado" — regra pedida depois do incidente de RLS.
+async function confirmarEntrega(messageId, tentativas = 4, intervaloMs = 5000) {
+  for (let i = 0; i < tentativas; i++) {
+    await new Promise(r => setTimeout(r, intervaloMs));
+    try {
+      const { data } = await axios.post(
+        `${EVOLUTION_URL}/chat/findMessages/${EVOLUTION_INSTANCE}`,
+        { where: { key: { id: messageId } } },
+        { headers: { apikey: EVOLUTION_KEY } }
+      );
+      const status = data?.[0]?.MessageUpdate?.slice(-1)?.[0]?.status
+        || data?.[0]?.status;
+      if (status === 'DELIVERY_ACK' || status === 'READ') return true;
+    } catch (e) { /* tenta de novo na próxima volta */ }
+  }
+  return false;
+}
 
 http.createServer((req, res) => {
   const file = path.join(__dirname, 'painel-cobrancas.html');
@@ -54,48 +85,78 @@ async function enviarCobrancas() {
 }
 
 async function enviarGroundControl() {
-  const hoje = new Date().toISOString().split('T')[0];
-  console.log(`[GROUND CONTROL] Verificando conteúdos para ${hoje}...`);
-  try {
-    const response = await notion.databases.query({
-      database_id: NOTION_DB_ID,
-      filter: { property: 'Data', date: { equals: hoje } }
-    });
-    if (!response.results.length) { console.log('[GROUND CONTROL] Nenhum conteúdo para hoje.'); return; }
-    for (const page of response.results) {
-      const props = page.properties;
-      const statusAtual = props.Status?.select?.name || props.Status?.status?.name || '';
-      if (statusAtual === 'Enviado') { continue; }
-      const clienteNome = props.Cliente?.rich_text?.[0]?.plain_text || '';
-      const tipo = props.Tipo?.select?.name || '';
-      const tema = props.Tema?.title?.[0]?.plain_text || '';
-      const instrucao = props.Instrução?.rich_text?.[0]?.plain_text || '';
-      const territorio = props.Território?.rich_text?.[0]?.plain_text || '';
-      if (!clienteNome) { continue; }
-      const { data: clientes } = await supabase.from('clientes').select('nome, telefone').ilike('nome', `%${clienteNome}%`).limit(1);
-      if (!clientes?.length) { console.log(`[GROUND CONTROL] ❌ "${clienteNome}" não encontrado.`); continue; }
-      const cliente = clientes[0];
-      const primeiroNome = cliente.nome.split(' ')[0];
-      const mensagem = `Bom dia, ${primeiroNome}! \n\n🎥 Hoje é dia de gravar: *"${tema}"*${territorio ? ` — Território: ${territorio}` : ''}.\n\n${instrucao}\n\n📲 Postar onde? *${tipo}*\n\nQualquer dúvida, me chama! 🚀`;
-      try {
-        await axios.post(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`, { number: cliente.telefone, text: mensagem }, { headers: { apikey: EVOLUTION_KEY } });
-        try { await notion.pages.update({ page_id: page.id, properties: { Status: { select: { name: 'Enviado' } } } }); } catch(e) {}
-        await supabase.from('ground_control_log').insert({ cliente_nome: cliente.nome, tipo, tema, telefone: cliente.telefone });
-        console.log(`[GROUND CONTROL] ✅ Enviado para ${cliente.nome} — ${tipo}: ${tema}`);
-      } catch (err) {
-        console.error(`[GROUND CONTROL] ❌ Erro para ${cliente.nome}:`, err.message);
+  console.log('[GROUND CONTROL] Verificando agenda no Supabase...');
+
+  const { data: itens, error } = await supabase
+    .from('ground_control_conteudo')
+    .select('*, clientes(nome, telefone)')
+    .eq('status', 'Agendado');
+  if (error) { console.error('[GROUND CONTROL] Erro Supabase:', error); return; }
+  if (!itens?.length) { console.log('[GROUND CONTROL] Nada agendado no momento.'); return; }
+
+  // horários próprios por cliente (cache de uma leitura só)
+  const { data: configs } = await supabase.from('ground_control').select('cliente_id, horario_envio, timezone, horario_proprio');
+  const configPorCliente = Object.fromEntries((configs || []).map(c => [c.cliente_id, c]));
+
+  for (const item of itens) {
+    const cliente = item.clientes;
+    if (!cliente) { console.log(`[GROUND CONTROL] ❌ Item ${item.id} sem cliente vinculado.`); continue; }
+
+    const config = configPorCliente[item.cliente_id];
+    const timezone = (config?.horario_proprio && config.timezone) ? config.timezone : TIMEZONE_PADRAO;
+    const horarioAlvo = (config?.horario_proprio && config.horario_envio) ? config.horario_envio.slice(0, 5) : HORARIO_PADRAO;
+
+    const { data: dataLocal, hora: horaLocal } = agoraNoFuso(timezone);
+    if (item.data !== dataLocal) continue;       // ainda não é o dia local do cliente
+    if (horaLocal < horarioAlvo) continue;        // ainda não bateu o horário configurado
+
+    // trava otimista pra não disparar 2x se o cron rodar de novo antes de terminar
+    const { error: lockError } = await supabase
+      .from('ground_control_conteudo')
+      .update({ status: 'Enviando' })
+      .eq('id', item.id)
+      .eq('status', 'Agendado');
+    if (lockError) continue;
+
+    const primeiroNome = cliente.nome.split(' ')[0];
+    const mensagem = `Bom dia, ${primeiroNome}! \n\n🎥 Hoje é dia de gravar: *"${item.tema}"*${item.territorio ? ` — Território: ${item.territorio}` : ''}.\n\n${item.instrucao || ''}\n\n📲 Postar onde? *${item.tipo}*\n\nQualquer dúvida, me chama! 🚀`;
+
+    try {
+      const resp = await axios.post(
+        `${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`,
+        { number: cliente.telefone, text: mensagem },
+        { headers: { apikey: EVOLUTION_KEY } }
+      );
+      const messageId = resp.data?.key?.id;
+      const entregue = messageId ? await confirmarEntrega(messageId) : false;
+
+      await supabase.from('ground_control_conteudo')
+        .update({ status: entregue ? 'Enviado' : 'Falhou', enviado_em: new Date().toISOString() })
+        .eq('id', item.id);
+
+      if (entregue) {
+        await supabase.from('ground_control_log').insert({ cliente_nome: cliente.nome, tipo: item.tipo, tema: item.tema, telefone: cliente.telefone });
+        console.log(`[GROUND CONTROL] ✅ Enviado e confirmado para ${cliente.nome} — ${item.tipo}: ${item.tema}`);
+      } else {
+        console.log(`[GROUND CONTROL] ⚠️ Enviado mas sem confirmação de entrega para ${cliente.nome} — marcado como Falhou, será revisado manualmente.`);
       }
+    } catch (err) {
+      await supabase.from('ground_control_conteudo').update({ status: 'Falhou' }).eq('id', item.id);
+      console.error(`[GROUND CONTROL] ❌ Erro para ${cliente.nome}:`, err.message);
     }
-  } catch (err) {
-    console.error('[GROUND CONTROL] Erro ao consultar Notion:', err.message);
   }
 }
 
-// 08:08 horário de Brasília = 11:08 UTC
+// Cobranças: todo dia às 08:08 horário de Brasília = 11:08 UTC
 cron.schedule('8 11 * * *', async () => {
   await enviarCobrancas();
+});
+
+// Ground Control: checa a cada 5 minutos, pra respeitar o horário
+// configurado individualmente por cliente (fusos diferentes)
+cron.schedule('*/5 * * * *', async () => {
   await enviarGroundControl();
 });
 
 console.log('🚀 Aftermoon Orbit + Ground Control rodando...');
-console.log('⏰ Disparos agendados para 08:08 (horário de Brasília).');
+console.log('⏰ Cobranças: 08:08 (horário de Brasília). Ground Control: checagem a cada 5 min, por horário configurado por cliente.');
