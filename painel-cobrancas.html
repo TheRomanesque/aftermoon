@@ -1598,7 +1598,7 @@ async function carregarStatsLP() {
   document.getElementById('lp-stat-falharam').textContent = posts.filter(p=>p.status==='failed').length;
 }
 
-async function carregarLaunchpad() {
+window.carregarLaunchpad = async function carregarLaunchpad() {
   await carregarClientesLP();
   await carregarConexoesLP();
   await carregarStatsLP();
