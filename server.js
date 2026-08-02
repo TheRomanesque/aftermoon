@@ -84,7 +84,7 @@ async function enviarCobrancas() {
   }
 }
 
-async function enviarGroundControl() {
+async function enviarGroundControl() { await recuperarEnviosOrfaos();
   console.log('[GROUND CONTROL] Verificando agenda no Supabase...');
 
   const { data: itens, error } = await supabase
@@ -160,3 +160,41 @@ cron.schedule('*/5 * * * *', async () => {
 
 console.log('🚀 Aftermoon Orbit + Ground Control rodando...');
 console.log('⏰ Cobranças: 08:08 (horário de Brasília). Ground Control: checagem a cada 5 min, por horário configurado por cliente.');
+async function recuperarEnviosOrfaos() {
+  const { data: presos, error } = await supabase
+  .from('ground_control_conteudo')
+  .select('*, clientes(nome, telefone)')
+  .eq('status', 'Enviando');
+  if (error || !presos || presos.length === 0) return;
+  console.log('[GROUND CONTROL] ' + presos.length + ' item(ns) preso(s) em Enviando de execucao anterior, verificando entrega real...');
+
+for (const item of presos) {
+  const cliente = item.clientes;
+  if (!cliente) {
+    await supabase.from('ground_control_conteudo').update({ status: 'Falhou' }).eq('id', item.id);
+    continue;
+  }
+  try {
+    const { data } = await axios.post(
+      EVOLUTION_URL + '/chat/findMessages/' + EVOLUTION_INSTANCE,
+      { where: { key: { remoteJid: cliente.telefone + '@s.whatsapp.net' } } },
+      { headers: { apikey: EVOLUTION_KEY } }
+      );
+    const registros = (data && data.messages && data.messages.records ? data.messages.records : []).filter(function(r) { return r.key && r.key.fromMe; });
+    const match = registros.find(function(r) { return r.message && r.message.conversation && r.message.conversation.includes(item.tema); });
+    const statusHist = (match && match.MessageUpdate ? match.MessageUpdate.map(function(m) { return m.status; }) : []);
+    const entregue = statusHist.includes('DELIVERY_ACK') || statusHist.includes('READ');
+
+                        await supabase.from('ground_control_conteudo').update({ status: entregue ? 'Enviado' : 'Falhou', enviado_em: new Date().toISOString() }).eq('id', item.id);
+
+  if (entregue) {
+    await supabase.from('ground_control_log').insert({ cliente_nome: cliente.nome, tipo: item.tipo, tema: item.tema, telefone: cliente.telefone });
+    console.log('[GROUND CONTROL] Recuperado (entrega confirmada): ' + cliente.nome + ' - ' + item.tema);
+  } else {
+    console.log('[GROUND CONTROL] Recuperado como Falhou (sem confirmacao de entrega): ' + cliente.nome + ' - ' + item.tema);
+  }
+  } catch (err) {
+    console.error('[GROUND CONTROL] Erro ao recuperar item preso ' + item.id + ':', err.message);
+  }
+}
+}
