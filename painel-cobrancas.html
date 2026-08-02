@@ -1707,7 +1707,7 @@ window.salvarPostLP = async function() {
     toast('Post enviado para aprovação.');
   }
   fecharModal('modal-lp-post');
-  carregarLaunchpad();
+  await carregarLaunchpad();
 };
 
 window.aprovarPostLP = async function(id) {
@@ -1715,7 +1715,7 @@ window.aprovarPostLP = async function(id) {
   const {error} = await db.from('launchpad_posts').update({status:'approved', approved_by: session?.user?.id || null, approved_at: new Date().toISOString()}).eq('id', id);
   if (error) return toast('Erro: '+error.message, true);
   toast('Post aprovado.');
-  carregarLaunchpad();
+  await carregarLaunchpad();
 };
 
 window.reprovarPostLP = async function(id) {
@@ -1723,7 +1723,7 @@ window.reprovarPostLP = async function(id) {
   const {error} = await db.from('launchpad_posts').update({status:'cancelled'}).eq('id', id);
   if (error) return toast('Erro: '+error.message, true);
   toast('Post reprovado.');
-  carregarLaunchpad();
+  await carregarLaunchpad();
 };
 
 window.abrirAgendarLP = function(id) {
@@ -1753,7 +1753,7 @@ window.confirmarAgendamentoLP = async function() {
   if (error) return toast('Erro: '+error.message, true);
   toast('Publicação agendada.');
   fecharModal('modal-lp-agendar');
-  carregarLaunchpad();
+  await carregarLaunchpad();
 };
 
 window.cancelarPostLP = async function(id) {
@@ -1761,14 +1761,14 @@ window.cancelarPostLP = async function(id) {
   const {error} = await db.from('launchpad_posts').update({status:'cancelled'}).eq('id', id);
   if (error) return toast('Erro: '+error.message, true);
   toast('Cancelado.');
-  carregarLaunchpad();
+  await carregarLaunchpad();
 };
 
 window.tentarNovamenteLP = async function(id) {
   const {error} = await db.from('launchpad_posts').update({status:'scheduled', scheduled_at: new Date().toISOString()}).eq('id', id);
   if (error) return toast('Erro: '+error.message, true);
   toast('Nova tentativa agendada — deve publicar em até 2 minutos.');
-  carregarLaunchpad();
+  await carregarLaunchpad();
 };
 
 // Importação em lote
@@ -1873,7 +1873,7 @@ window.confirmarImportacaoLP = async function() {
   if (error) return toast('Erro ao importar posts: '+error.message, true);
   toast(validas.length + ' post(s) importado(s) — aguardando aprovação.');
   fecharModal('modal-lp-import');
-  carregarLaunchpad();
+  await carregarLaunchpad();
 };
 
 // Integrações (conexão real via LinkedIn OAuth quando configurado; simulada por padrão)
