@@ -282,7 +282,7 @@ textarea{resize:vertical;min-height:80px}
       Ground Control
     </div>
     <div class="nav-item" onclick="showPage('launchpad')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       Launchpad
     </div>
     <div class="sidebar-footer">
@@ -764,7 +764,7 @@ window.showPage = function(id) {
   document.getElementById('topbar-back').style.display = id==='perfil' ? 'flex' : 'none';
   document.querySelectorAll('.nav-item').forEach(n=>{
     const t=n.textContent.trim().toLowerCase();
-    if((id==='dashboard'&&t==='painel')||(id==='clientes'&&t==='clientes')||(id==='cobrancas'&&t==='cobranças')||(id==='nova'&&t.includes('nova'))||(id==='groundcontrol'&&t.includes('ground'))||(id==='faturamento'&&t==='faturamento'))||(id==='launchpad'&&t==='launchpad') n.classList.add('active');
+    if((id==='dashboard'&&t==='painel')||(id==='clientes'&&t==='clientes')||(id==='cobrancas'&&t==='cobranças')||(id==='nova'&&t.includes('nova'))||(id==='groundcontrol'&&t.includes('ground'))||(id==='faturamento'&&t==='faturamento')||(id==='launchpad'&&t==='launchpad')) n.classList.add('active');
     if(id==='groundcontrol'&&t.includes('ground')) { n.style.color='#a78bfa'; n.style.background='#a78bfa15'; }
   });
   if(id==='dashboard') carregarDashboard();
