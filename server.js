@@ -50,7 +50,16 @@ async function confirmarEntrega(messageId, tentativas = 4, intervaloMs = 5000) {
   return false;
 }
 
-http.createServer((req, res) => {
+http.createServer(async (req, res) => {
+  const url = new URL(req.url, 'http://' + req.headers.host);
+
+  if (url.pathname === '/api/launchpad/linkedin/connect') {
+    return iniciarConexaoLinkedIn(req, res, url);
+  }
+  if (url.pathname === '/api/launchpad/linkedin/callback') {
+    return finalizarConexaoLinkedIn(req, res, url);
+  }
+
   const file = path.join(__dirname, 'painel-cobrancas.html');
   fs.readFile(file, (err, data) => {
     if (err) { res.writeHead(500); res.end('Erro: ' + err.message); return; }
@@ -58,6 +67,201 @@ http.createServer((req, res) => {
     res.end(data);
   });
 }).listen(PORT, () => console.log('🌐 Servidor rodando na porta ' + PORT));
+
+// ===== LAUNCHPAD: OAuth real do LinkedIn =====
+// Só funciona quando LINKEDIN_CLIENT_ID/SECRET e LAUNCHPAD_ENCRYPTION_KEY estiverem
+// configurados no Railway. Até lá, o botão "Conectar" do Orbit usa o modo simulado
+// (100% client-side, não passa por aqui) — nunca finge uma conexão real sem essas
+// credenciais configuradas.
+function linkedinConfigurado() {
+  return !!(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET);
+}
+
+function redirectUriLaunchpad(req) {
+  return `https://${req.headers.host}/api/launchpad/linkedin/callback`;
+}
+
+function iniciarConexaoLinkedIn(req, res, url) {
+  if (!linkedinConfigurado()) {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end('<p>App do LinkedIn ainda não configurado neste ambiente. Use o modo simulado no Orbit por enquanto.</p>');
+    return;
+  }
+  const clienteId = url.searchParams.get('clienteId') || '';
+  const accountType = url.searchParams.get('accountType') || 'personal';
+  const state = Buffer.from(JSON.stringify({ clienteId, accountType })).toString('base64url');
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: process.env.LINKEDIN_CLIENT_ID,
+    redirect_uri: redirectUriLaunchpad(req),
+    state,
+    scope: 'openid profile w_member_social',
+  });
+  res.writeHead(302, { Location: `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}` });
+  res.end();
+}
+
+async function finalizarConexaoLinkedIn(req, res, url) {
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
+  if (!code || !state) { res.writeHead(400); res.end('Faltou code/state do LinkedIn.'); return; }
+  let clienteId, accountType;
+  try {
+    ({ clienteId, accountType } = JSON.parse(Buffer.from(state, 'base64url').toString('utf8')));
+  } catch (e) { res.writeHead(400); res.end('State inválido.'); return; }
+
+  try {
+    const tokenResp = await axios.post(
+      'https://www.linkedin.com/oauth/v2/accessToken',
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUriLaunchpad(req),
+        client_id: process.env.LINKEDIN_CLIENT_ID,
+        client_secret: process.env.LINKEDIN_CLIENT_SECRET,
+      }).toString(),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+    const { access_token, refresh_token, expires_in } = tokenResp.data;
+
+    const userResp = await axios.get('https://api.linkedin.com/v2/userinfo', {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+    const perfil = userResp.data;
+
+    await supabase.from('launchpad_social_connections').upsert({
+      cliente_id: clienteId,
+      platform: 'linkedin',
+      account_type: accountType,
+      external_account_id: perfil.sub,
+      account_name: perfil.name,
+      account_avatar_url: perfil.picture || null,
+      encrypted_access_token: encriptarTokenLP(access_token),
+      encrypted_refresh_token: refresh_token ? encriptarTokenLP(refresh_token) : null,
+      token_expires_at: new Date(Date.now() + (expires_in || 0) * 1000).toISOString(),
+      scopes: 'openid profile w_member_social',
+      connection_status: 'connected',
+      is_mock: false,
+      updated_at: new Date().toISOString(),
+    });
+
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end('<p>Conta do LinkedIn conectada com sucesso! Pode fechar esta aba e voltar pro Orbit.</p>');
+  } catch (err) {
+    console.error('[LAUNCHPAD] Erro no callback do LinkedIn:', err.response?.data || err.message);
+    res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end('<p>Erro ao conectar com o LinkedIn: ' + (err.response?.data?.error_description || err.message) + '</p>');
+  }
+}
+
+function chaveCriptografiaLP() {
+  const b64 = process.env.LAUNCHPAD_ENCRYPTION_KEY;
+  if (!b64) throw new Error('LAUNCHPAD_ENCRYPTION_KEY não configurada.');
+  const key = Buffer.from(b64, 'base64');
+  if (key.length !== 32) throw new Error('LAUNCHPAD_ENCRYPTION_KEY precisa decodificar para 32 bytes.');
+  return key;
+}
+
+function encriptarTokenLP(texto) {
+  const crypto = require('crypto');
+  const key = chaveCriptografiaLP();
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  const enc = Buffer.concat([cipher.update(String(texto), 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([iv, tag, enc]).toString('base64');
+}
+
+function decriptarTokenLP(payloadB64) {
+  const crypto = require('crypto');
+  const key = chaveCriptografiaLP();
+  const raw = Buffer.from(payloadB64, 'base64');
+  const iv = raw.subarray(0, 12), tag = raw.subarray(12, 28), enc = raw.subarray(28);
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(enc), decipher.final()]).toString('utf8');
+}
+
+// Publica no LinkedIn de verdade (Community Management API). Só é chamado quando a
+// conexão NÃO é simulada — conexões is_mock nunca chegam aqui.
+async function publicarNoLinkedInReal(post, conexao) {
+  const accessToken = decriptarTokenLP(conexao.encrypted_access_token);
+  const body = {
+    author: conexao.account_type === 'company' ? `urn:li:organization:${conexao.external_account_id}` : `urn:li:person:${conexao.external_account_id}`,
+    commentary: post.content,
+    visibility: 'PUBLIC',
+    distribution: { feedDistribution: 'MAIN_FEED', targetEntities: [], thirdPartyDistributionChannels: [] },
+    lifecycleState: 'PUBLISHED',
+    isReshareDisabledByAuthor: false,
+  };
+  const resp = await axios.post('https://api.linkedin.com/rest/posts', body, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      'X-Restli-Protocol-Version': '2.0.0',
+      'LinkedIn-Version': '202405',
+    },
+  });
+  const urn = resp.headers['x-restli-id'] || resp.headers['x-linkedin-id'] || null;
+  return { externalPostId: urn, externalPostUrl: urn ? `https://www.linkedin.com/feed/update/${urn}` : null, simulado: false };
+}
+
+// Roda a cada 2 minutos: pega posts agendados cuja hora já chegou e publica —
+// de verdade se a conta for real, ou de forma simulada (claramente marcada,
+// nunca apresentada como real) se a conta for [SIMULADO].
+async function publicarLaunchpad() {
+  const { data: posts, error } = await supabase
+    .from('launchpad_posts')
+    .select('*, clientes(nome), launchpad_social_connections(*)')
+    .eq('status', 'scheduled')
+    .lte('scheduled_at', new Date().toISOString());
+  if (error) { console.error('[LAUNCHPAD] Erro ao buscar agendados:', error.message); return; }
+  if (!posts?.length) return;
+
+  for (const post of posts) {
+    const conexao = post.launchpad_social_connections;
+    if (!conexao || conexao.connection_status !== 'connected') {
+      await supabase.from('launchpad_posts').update({ status: 'failed' }).eq('id', post.id);
+      continue;
+    }
+    const { error: lockError } = await supabase
+      .from('launchpad_posts')
+      .update({ status: 'publishing' })
+      .eq('id', post.id)
+      .eq('status', 'scheduled');
+    if (lockError) continue;
+
+    const tentativa = (post.attempt_count || 0) + 1;
+    try {
+      let resultado;
+      if (conexao.is_mock || !linkedinConfigurado()) {
+        await new Promise((r) => setTimeout(r, 300));
+        resultado = { externalPostId: 'mock-post-' + post.id, externalPostUrl: null, simulado: true };
+      } else {
+        resultado = await publicarNoLinkedInReal(post, conexao);
+      }
+      await supabase.from('launchpad_posts').update({
+        status: 'published',
+        published_at: new Date().toISOString(),
+        external_post_id: resultado.externalPostId,
+        external_post_url: resultado.externalPostUrl,
+        attempt_count: tentativa,
+      }).eq('id', post.id);
+      await supabase.from('launchpad_publishing_attempts').insert({
+        post_id: post.id, attempt_number: tentativa, status: 'success',
+        provider_response: JSON.stringify(resultado), completed_at: new Date().toISOString(),
+      });
+      console.log(`[LAUNCHPAD] ✅ ${resultado.simulado ? '[SIMULADO] ' : ''}Publicado para ${post.clientes?.nome}`);
+    } catch (err) {
+      await supabase.from('launchpad_posts').update({ status: 'failed', attempt_count: tentativa }).eq('id', post.id);
+      await supabase.from('launchpad_publishing_attempts').insert({
+        post_id: post.id, attempt_number: tentativa, status: 'failed',
+        error_message: String(err.message || err), completed_at: new Date().toISOString(),
+      });
+      console.error(`[LAUNCHPAD] ❌ Erro ao publicar para ${post.clientes?.nome}:`, err.message);
+    }
+  }
+}
 
 async function enviarCobrancas() {
   const hoje = new Date().toISOString().split('T')[0];
@@ -156,6 +360,11 @@ cron.schedule('8 11 * * *', async () => {
 // configurado individualmente por cliente (fusos diferentes)
 cron.schedule('*/5 * * * *', async () => {
   await enviarGroundControl();
+});
+
+// Launchpad: checa a cada 2 minutos por posts agendados prontos pra publicar.
+cron.schedule('*/2 * * * *', async () => {
+  await publicarLaunchpad();
 });
 
 console.log('🚀 Aftermoon Orbit + Ground Control rodando...');

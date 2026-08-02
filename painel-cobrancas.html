@@ -465,10 +465,37 @@ textarea{resize:vertical;min-height:80px}
       </div>
 
       <!-- LAUNCHPAD --><div class="page" id="page-launchpad">
-        <div class="table-card" style="padding:56px 24px;text-align:center">
-          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px;color:#a78bfa">Launchpad</div>
-          <div style="font-size:13px;color:var(--muted2);max-width:420px;margin:0 auto">Em desenvolvimento. Ja existe um prototipo funcional (importacao de planilha, aprovacao, agendamento e publicacao real no LinkedIn) sendo migrado para dentro do Orbit. Em breve disponivel aqui.</div>
-                                                                                                    <!-- FATURAMENTO                                                                                                                                                                                        --><div class="page" id="page-faturamento"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><div style="display:flex;gap:8px" id="fat-anos"><button class="btn btn-outline" id="fat-ano-2026" onclick="trocarAnoFaturamento(2026)">2026</button><button class="btn btn-outline" id="fat-ano-2027" onclick="trocarAnoFaturamento(2027)">2027</button></div></div><div class="stat-grid" style="margin-bottom:20px"><div class="stat-card"><div class="stat-label">Recebido</div><div class="stat-value green" id="fat-recebido">R$ 0</div></div><div class="stat-card"><div class="stat-label">A receber</div><div class="stat-value" id="fat-areceber">R$ 0</div></div><div class="stat-card"><div class="stat-label">Projetado</div><div class="stat-value" id="fat-projetado">R$ 0</div></div><div class="stat-card"><div class="stat-label">Vencido</div><div class="stat-value orange" id="fat-vencido">R$ 0</div></div></div><div style="display:flex;gap:16px;align-items:center;margin-bottom:14px;font-size:12px;color:var(--muted)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#00c97a;display:inline-block"></span>Pago</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#f5a623;display:inline-block"></span>Pendente</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#e5484d;display:inline-block"></span>Vencido</span></div><div class="table-card" style="overflow-x:auto"><table><thead><tr id="fat-thead"></tr></thead><tbody id="fat-tbody"></tbody></table></div></div><!-- NOVA COBRANÇA -->
+        <div id="lp-aviso-simulado" style="display:none;background:#f5a62318;border:1px solid #f5a62344;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#f5a623">⚠ Uma ou mais contas estão conectadas em modo simulado — nenhuma publicação real é feita no LinkedIn até o app do LinkedIn ser configurado em produção. Tudo fica marcado [SIMULADO].</div>
+        <div class="stat-grid" style="margin-bottom:20px">
+          <div class="stat-card"><div class="stat-label">Aguardando aprovação</div><div class="stat-value orange" id="lp-stat-aprovacao">0</div></div>
+          <div class="stat-card"><div class="stat-label">Agendados</div><div class="stat-value" id="lp-stat-agendados">0</div></div>
+          <div class="stat-card"><div class="stat-label">Publicados (30 dias)</div><div class="stat-value green" id="lp-stat-publicados">0</div></div>
+          <div class="stat-card"><div class="stat-label">Falharam</div><div class="stat-value" id="lp-stat-falharam" style="color:var(--red)">0</div></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="abrirNovoPostLP()">+ Novo post</button>
+          <button class="btn btn-outline" onclick="abrirImportarLP()">⬆ Importar planilha</button>
+          <button class="btn btn-outline" onclick="abrirIntegracoesLP()">🔗 Contas conectadas</button>
+          <select id="lp-filtro-status" onchange="carregarLaunchpad()" style="margin-left:auto;width:auto;padding:8px 10px">
+            <option value="">Todos os status</option>
+            <option value="pending_approval">Aguardando aprovação</option>
+            <option value="approved">Aprovado</option>
+            <option value="scheduled">Agendado</option>
+            <option value="published">Publicado</option>
+            <option value="failed">Falhou</option>
+            <option value="cancelled">Cancelado</option>
+          </select>
+          <select id="lp-filtro-cliente" onchange="carregarLaunchpad()" style="width:auto;padding:8px 10px"><option value="">Todos os clientes</option></select>
+        </div>
+        <div class="table-card" style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Cliente</th><th>Conteúdo</th><th>Conta</th><th>Status</th><th>Agendado para</th><th>Ações</th></tr></thead>
+            <tbody id="lp-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted)">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FATURAMENTO                                                                                                                                                                                        --><div class="page" id="page-faturamento"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px"><div style="display:flex;gap:8px" id="fat-anos"><button class="btn btn-outline" id="fat-ano-2026" onclick="trocarAnoFaturamento(2026)">2026</button><button class="btn btn-outline" id="fat-ano-2027" onclick="trocarAnoFaturamento(2027)">2027</button></div></div><div class="stat-grid" style="margin-bottom:20px"><div class="stat-card"><div class="stat-label">Recebido</div><div class="stat-value green" id="fat-recebido">R$ 0</div></div><div class="stat-card"><div class="stat-label">A receber</div><div class="stat-value" id="fat-areceber">R$ 0</div></div><div class="stat-card"><div class="stat-label">Projetado</div><div class="stat-value" id="fat-projetado">R$ 0</div></div><div class="stat-card"><div class="stat-label">Vencido</div><div class="stat-value orange" id="fat-vencido">R$ 0</div></div></div><div style="display:flex;gap:16px;align-items:center;margin-bottom:14px;font-size:12px;color:var(--muted)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#00c97a;display:inline-block"></span>Pago</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#f5a623;display:inline-block"></span>Pendente</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#e5484d;display:inline-block"></span>Vencido</span></div><div class="table-card" style="overflow-x:auto"><table><thead><tr id="fat-thead"></tr></thead><tbody id="fat-tbody"></tbody></table></div></div><!-- NOVA COBRANÇA -->
       <div class="page" id="page-nova">
         <div style="margin-bottom:16px"><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700">Nova cobrança</div><div style="font-size:12px;color:var(--muted2);margin-top:2px">Cadastre um novo job e suas parcelas</div></div>
         <div class="form-card">
@@ -674,6 +701,71 @@ textarea{resize:vertical;min-height:80px}
   </div>
 </div>
 
+<div class="modal-bg" id="modal-lp-post">
+  <div class="modal" style="width:560px">
+    <div class="modal-header"><div class="modal-title" id="lp-post-titulo">Novo post</div><button class="modal-close" onclick="fecharModal('modal-lp-post')">✕</button></div>
+    <input type="hidden" id="lp-post-id">
+    <div class="field"><label>Cliente</label><select id="lp-post-cliente" onchange="atualizarContasLP()"><option value="">Selecione o cliente</option></select></div>
+    <div class="field"><label>Conta do LinkedIn</label><select id="lp-post-conta"><option value="">Selecione o cliente primeiro</option></select></div>
+    <div class="field"><label>Título interno (opcional)</label><input type="text" id="lp-post-titulo-interno" placeholder="Só pra organização, não aparece no post"></div>
+    <div class="field"><label>Conteúdo</label><textarea id="lp-post-conteudo" rows="6" placeholder="Texto do post..." oninput="atualizarContadorLP()"></textarea><div style="font-size:11px;color:var(--muted2);margin-top:4px" id="lp-post-contador">0/3000</div></div>
+    <div class="field"><label>Link (opcional)</label><input type="text" id="lp-post-link" placeholder="https://..."></div>
+    <div class="field"><label>Notas internas (opcional)</label><input type="text" id="lp-post-notas" placeholder="Só a equipe vê"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-lp-post')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarPostLP()">Enviar para aprovação</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-lp-agendar">
+  <div class="modal" style="width:420px">
+    <div class="modal-header"><div class="modal-title">Agendar publicação</div><button class="modal-close" onclick="fecharModal('modal-lp-agendar')">✕</button></div>
+    <input type="hidden" id="lp-agendar-id">
+    <div class="field"><label>Data</label><input type="date" id="lp-agendar-data"></div>
+    <div class="field"><label>Hora (horário de Brasília)</label><input type="time" id="lp-agendar-hora" value="09:00"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-lp-agendar')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarAgendamentoLP()">Agendar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-lp-import">
+  <div class="modal" style="width:720px">
+    <div class="modal-header"><div class="modal-title">Importar em lote (Excel)</div><button class="modal-close" onclick="fecharModal('modal-lp-import')">✕</button></div>
+    <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">Colunas na planilha, nessa ordem: <strong style="color:var(--text)">Cliente · Conteúdo · Data · Hora · Link (opcional)</strong>.</p>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
+      <button class="btn btn-outline" onclick="baixarModeloLP()">⬇ Baixar modelo .xlsx</button>
+      <span style="font-size:11.5px;color:var(--muted2)">as colunas já vêm no lugar certo, é só preencher</span>
+    </div>
+    <div id="lp-dropzone" style="border:1.5px dashed var(--border2);border-radius:var(--radius);padding:24px;text-align:center;background:var(--surface2);cursor:pointer" onclick="document.getElementById('lp-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border2)'" ondrop="handleDropLP(event)">
+      <div style="font-size:22px;margin-bottom:8px">📄</div>
+      <div id="lp-dropzone-texto" style="font-size:13px;font-weight:500">Clique para escolher a planilha .xlsx</div>
+      <div style="font-size:11.5px;color:var(--muted2);margin-top:4px">ou arraste o arquivo aqui</div>
+    </div>
+    <input type="file" id="lp-file-input" accept=".xlsx,.xls" style="display:none" onchange="lerArquivoLP(event)">
+    <div id="lp-preview-wrap" style="display:none;margin-top:18px">
+      <table>
+        <thead><tr><th></th><th>Conteúdo</th><th>Cliente</th><th>Data</th><th>Hora</th><th>Match</th></tr></thead>
+        <tbody id="lp-preview-tbody"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-lp-import')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-lp-confirmar-import" onclick="confirmarImportacaoLP()" disabled>Confirmar importação</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-lp-integracoes">
+  <div class="modal" style="width:520px">
+    <div class="modal-header"><div class="modal-title">Contas conectadas</div><button class="modal-close" onclick="fecharModal('modal-lp-integracoes')">✕</button></div>
+    <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">Sem o app do LinkedIn configurado em produção, a conexão fica em <strong style="color:#f5a623">modo simulado</strong> — nada é publicado de verdade até isso ser configurado.</p>
+    <div id="lp-integracoes-lista"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -769,7 +861,7 @@ window.showPage = function(id) {
   if(id==='clientes') carregarClientes();
   if(id==='cobrancas') carregarCobrancas();
   if(id==='groundcontrol') { carregarClientesGC().then(carregarAgendadosGC); carregarLogGC(); }
-  if(id==='nova') carregarClientesSelect();if(id==='faturamento') trocarAnoFaturamento(new Date().getFullYear());
+  if(id==='nova') carregarClientesSelect();if(id==='faturamento') trocarAnoFaturamento(new Date().getFullYear());if(id==='launchpad') carregarLaunchpad();
 };
 
 window.voltarDePerfil = () => showPage('clientes');
@@ -1455,6 +1547,375 @@ document.getElementById('toggle-programar').addEventListener('change',function()
 });
 
 document.querySelectorAll('.modal-bg').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+
+// ===== LAUNCHPAD =====
+let clientesLP = [];
+let conexoesLP = [];
+let postsLP = [];
+let importPendenteLP = [];
+
+const STATUS_LABEL_LP = { draft:'Rascunho', pending_approval:'Aguardando aprovação', approved:'Aprovado', scheduled:'Agendado', publishing:'Publicando', published:'Publicado', failed:'Falhou', cancelled:'Cancelado' };
+const STATUS_BADGE_LP = { draft:'badge-pending', pending_approval:'badge-pending', approved:'badge-sent', scheduled:'badge-today', publishing:'badge-today', published:'badge-sent', failed:'badge-overdue', cancelled:'badge-overdue' };
+
+async function carregarClientesLP() {
+  const {data} = await db.from('clientes').select('id,nome').order('nome');
+  clientesLP = data || [];
+  const selFiltro = document.getElementById('lp-filtro-cliente');
+  const valorAtual = selFiltro.value;
+  selFiltro.innerHTML = '<option value="">Todos os clientes</option>' + clientesLP.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+  selFiltro.value = valorAtual;
+  const selPost = document.getElementById('lp-post-cliente');
+  const postAtual = selPost.value;
+  selPost.innerHTML = '<option value="">Selecione o cliente</option>' + clientesLP.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+  selPost.value = postAtual;
+}
+
+async function carregarConexoesLP() {
+  const {data} = await db.from('launchpad_social_connections').select('*').order('created_at');
+  conexoesLP = data || [];
+  document.getElementById('lp-aviso-simulado').style.display = conexoesLP.some(c=>c.is_mock && c.connection_status==='connected') ? 'block' : 'none';
+}
+
+window.atualizarContasLP = function() {
+  const clienteId = document.getElementById('lp-post-cliente').value;
+  const sel = document.getElementById('lp-post-conta');
+  const contas = conexoesLP.filter(c=>c.cliente_id===clienteId && c.connection_status==='connected');
+  sel.innerHTML = contas.length ? contas.map(c=>`<option value="${c.id}">${c.account_name}${c.is_mock?' [SIMULADO]':''}</option>`).join('') : '<option value="">Nenhuma conta conectada — use "Contas conectadas"</option>';
+};
+
+window.atualizarContadorLP = function() {
+  const el = document.getElementById('lp-post-conteudo');
+  document.getElementById('lp-post-contador').textContent = (el.value||'').length + '/3000';
+};
+
+async function carregarStatsLP() {
+  const {data} = await db.from('launchpad_posts').select('status, published_at').is('deleted_at', null);
+  const posts = data || [];
+  const trintaDiasAtras = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+  document.getElementById('lp-stat-aprovacao').textContent = posts.filter(p=>p.status==='pending_approval').length;
+  document.getElementById('lp-stat-agendados').textContent = posts.filter(p=>p.status==='scheduled').length;
+  document.getElementById('lp-stat-publicados').textContent = posts.filter(p=>p.status==='published' && p.published_at >= trintaDiasAtras).length;
+  document.getElementById('lp-stat-falharam').textContent = posts.filter(p=>p.status==='failed').length;
+}
+
+async function carregarLaunchpad() {
+  await carregarClientesLP();
+  await carregarConexoesLP();
+  await carregarStatsLP();
+  let q = db.from('launchpad_posts').select('*, clientes(nome), launchpad_social_connections(account_name, is_mock)').is('deleted_at', null).order('created_at', {ascending:false});
+  const filtroStatus = document.getElementById('lp-filtro-status').value;
+  const filtroCliente = document.getElementById('lp-filtro-cliente').value;
+  if (filtroStatus) q = q.eq('status', filtroStatus);
+  if (filtroCliente) q = q.eq('cliente_id', filtroCliente);
+  const {data, error} = await q;
+  const tbody = document.getElementById('lp-tbody');
+  if (error) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red)">Erro ao carregar: '+error.message+'</td></tr>'; return; }
+  postsLP = data || [];
+  if (!postsLP.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Nenhum post encontrado.</td></tr>'; return; }
+  tbody.innerHTML = postsLP.map(renderLinhaLP).join('');
+}
+
+function renderLinhaLP(p) {
+  const conta = p.launchpad_social_connections;
+  const agendado = p.scheduled_at ? new Date(p.scheduled_at).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '—';
+  const conteudoResumo = (p.content||'').slice(0,70) + ((p.content||'').length > 70 ? '…' : '');
+  let acoes = `<button class="btn btn-ghost" style="padding:5px 8px" onclick="abrirEditarPostLP('${p.id}')" title="Editar">✎</button>`;
+  if (p.status === 'pending_approval') {
+    acoes += `<button class="btn btn-primary" style="padding:5px 10px" onclick="aprovarPostLP('${p.id}')">Aprovar</button><button class="btn btn-danger" style="padding:5px 10px" onclick="reprovarPostLP('${p.id}')">Reprovar</button>`;
+  } else if (p.status === 'approved') {
+    acoes += `<button class="btn btn-primary" style="padding:5px 10px" onclick="abrirAgendarLP('${p.id}')">Agendar</button>`;
+  } else if (p.status === 'scheduled') {
+    acoes += `<button class="btn btn-outline" style="padding:5px 10px" onclick="abrirAgendarLP('${p.id}')">Reagendar</button><button class="btn btn-danger" style="padding:5px 10px" onclick="cancelarPostLP('${p.id}')">Cancelar</button>`;
+  } else if (p.status === 'failed') {
+    acoes += `<button class="btn btn-primary" style="padding:5px 10px" onclick="tentarNovamenteLP('${p.id}')">Tentar novamente</button>`;
+  } else if (p.status === 'published') {
+    acoes = p.external_post_url ? `<a class="btn btn-outline" style="padding:5px 10px" href="${p.external_post_url}" target="_blank">Ver no LinkedIn</a>` : `<span style="font-size:11px;color:var(--muted2)">[SIMULADO] publicado</span>`;
+  }
+  return `<tr>
+    <td>${p.clientes?.nome || '—'}</td>
+    <td style="max-width:260px">${conteudoResumo}</td>
+    <td style="font-size:12px">${conta?.account_name || '—'}${conta?.is_mock ? ' <span style="color:#f5a623">[SIM]</span>' : ''}</td>
+    <td><span class="badge ${STATUS_BADGE_LP[p.status]||'badge-pending'}">${STATUS_LABEL_LP[p.status]||p.status}</span></td>
+    <td style="font-size:12px">${agendado}</td>
+    <td><div class="btn-group">${acoes}</div></td>
+  </tr>`;
+}
+
+window.abrirNovoPostLP = function() {
+  document.getElementById('lp-post-titulo').textContent = 'Novo post';
+  document.getElementById('lp-post-id').value = '';
+  document.getElementById('lp-post-cliente').value = '';
+  document.getElementById('lp-post-conta').innerHTML = '<option value="">Selecione o cliente primeiro</option>';
+  document.getElementById('lp-post-titulo-interno').value = '';
+  document.getElementById('lp-post-conteudo').value = '';
+  document.getElementById('lp-post-link').value = '';
+  document.getElementById('lp-post-notas').value = '';
+  atualizarContadorLP();
+  abrirModal('modal-lp-post');
+};
+
+window.abrirEditarPostLP = function(id) {
+  const p = postsLP.find(x=>x.id===id);
+  if (!p) return;
+  document.getElementById('lp-post-titulo').textContent = 'Editar post';
+  document.getElementById('lp-post-id').value = p.id;
+  document.getElementById('lp-post-cliente').value = p.cliente_id;
+  atualizarContasLP();
+  document.getElementById('lp-post-conta').value = p.social_connection_id || '';
+  document.getElementById('lp-post-titulo-interno').value = p.titulo_interno || '';
+  document.getElementById('lp-post-conteudo').value = p.content || '';
+  document.getElementById('lp-post-link').value = p.link || '';
+  document.getElementById('lp-post-notas').value = p.internal_notes || '';
+  atualizarContadorLP();
+  abrirModal('modal-lp-post');
+};
+
+window.salvarPostLP = async function() {
+  const id = document.getElementById('lp-post-id').value;
+  const clienteId = document.getElementById('lp-post-cliente').value;
+  const contaId = document.getElementById('lp-post-conta').value || null;
+  const conteudo = document.getElementById('lp-post-conteudo').value.trim();
+  if (!clienteId) return toast('Selecione o cliente.', true);
+  if (!conteudo) return toast('Escreva o conteúdo do post.', true);
+  if (conteudo.length > 3000) return toast('Conteúdo acima do limite do LinkedIn (3000 caracteres).', true);
+  const payload = {
+    cliente_id: clienteId,
+    social_connection_id: contaId,
+    titulo_interno: document.getElementById('lp-post-titulo-interno').value.trim() || null,
+    content: conteudo,
+    link: document.getElementById('lp-post-link').value.trim() || null,
+    internal_notes: document.getElementById('lp-post-notas').value.trim() || null,
+  };
+  const {data:{session}} = await db.auth.getSession();
+  if (id) {
+    const original = postsLP.find(x=>x.id===id);
+    if (original && (original.status === 'approved' || original.status === 'scheduled')) {
+      payload.status = 'pending_approval';
+      payload.approved_by = null;
+      payload.approved_at = null;
+      payload.scheduled_at = null;
+    }
+    const {error} = await db.from('launchpad_posts').update(payload).eq('id', id);
+    if (error) return toast('Erro ao salvar: '+error.message, true);
+    toast('Post atualizado.');
+  } else {
+    payload.status = 'pending_approval';
+    payload.source = 'manual';
+    payload.created_by = session?.user?.id || null;
+    const {error} = await db.from('launchpad_posts').insert(payload);
+    if (error) return toast('Erro ao criar: '+error.message, true);
+    toast('Post enviado para aprovação.');
+  }
+  fecharModal('modal-lp-post');
+  carregarLaunchpad();
+};
+
+window.aprovarPostLP = async function(id) {
+  const {data:{session}} = await db.auth.getSession();
+  const {error} = await db.from('launchpad_posts').update({status:'approved', approved_by: session?.user?.id || null, approved_at: new Date().toISOString()}).eq('id', id);
+  if (error) return toast('Erro: '+error.message, true);
+  toast('Post aprovado.');
+  carregarLaunchpad();
+};
+
+window.reprovarPostLP = async function(id) {
+  if (!confirm('Reprovar este post? Ele será cancelado.')) return;
+  const {error} = await db.from('launchpad_posts').update({status:'cancelled'}).eq('id', id);
+  if (error) return toast('Erro: '+error.message, true);
+  toast('Post reprovado.');
+  carregarLaunchpad();
+};
+
+window.abrirAgendarLP = function(id) {
+  document.getElementById('lp-agendar-id').value = id;
+  const p = postsLP.find(x=>x.id===id);
+  if (!p?.social_connection_id) { toast('Este post não tem conta do LinkedIn vinculada. Edite o post e escolha uma conta antes de agendar.', true); return; }
+  if (p?.scheduled_at) {
+    const d = new Date(p.scheduled_at);
+    document.getElementById('lp-agendar-data').value = new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo', year:'numeric', month:'2-digit', day:'2-digit'}).format(d);
+    document.getElementById('lp-agendar-hora').value = new Intl.DateTimeFormat('pt-BR', {timeZone:'America/Sao_Paulo', hour:'2-digit', minute:'2-digit', hour12:false}).format(d);
+  } else {
+    document.getElementById('lp-agendar-data').value = '';
+    document.getElementById('lp-agendar-hora').value = '09:00';
+  }
+  abrirModal('modal-lp-agendar');
+};
+
+window.confirmarAgendamentoLP = async function() {
+  const id = document.getElementById('lp-agendar-id').value;
+  const data = document.getElementById('lp-agendar-data').value;
+  const hora = document.getElementById('lp-agendar-hora').value;
+  if (!data || !hora) return toast('Escolha data e hora.', true);
+  const scheduledAt = new Date(`${data}T${hora}:00-03:00`);
+  if (isNaN(scheduledAt.getTime())) return toast('Data/hora inválida.', true);
+  if (scheduledAt.getTime() < Date.now() - 60000) return toast('Escolha um horário no futuro.', true);
+  const {error} = await db.from('launchpad_posts').update({status:'scheduled', scheduled_at: scheduledAt.toISOString()}).eq('id', id);
+  if (error) return toast('Erro: '+error.message, true);
+  toast('Publicação agendada.');
+  fecharModal('modal-lp-agendar');
+  carregarLaunchpad();
+};
+
+window.cancelarPostLP = async function(id) {
+  if (!confirm('Cancelar esta publicação agendada?')) return;
+  const {error} = await db.from('launchpad_posts').update({status:'cancelled'}).eq('id', id);
+  if (error) return toast('Erro: '+error.message, true);
+  toast('Cancelado.');
+  carregarLaunchpad();
+};
+
+window.tentarNovamenteLP = async function(id) {
+  const {error} = await db.from('launchpad_posts').update({status:'scheduled', scheduled_at: new Date().toISOString()}).eq('id', id);
+  if (error) return toast('Erro: '+error.message, true);
+  toast('Nova tentativa agendada — deve publicar em até 2 minutos.');
+  carregarLaunchpad();
+};
+
+// Importação em lote
+window.abrirImportarLP = function() {
+  document.getElementById('lp-preview-wrap').style.display = 'none';
+  document.getElementById('lp-dropzone-texto').textContent = 'Clique para escolher a planilha .xlsx';
+  document.getElementById('btn-lp-confirmar-import').disabled = true;
+  importPendenteLP = [];
+  abrirModal('modal-lp-import');
+};
+
+window.baixarModeloLP = function() {
+  const ws = XLSX.utils.aoa_to_sheet([['Cliente','Conteúdo','Data','Hora','Link'], ['Heres Massa','Texto do post aqui...','2026-08-10','09:00','']]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Launchpad');
+  XLSX.writeFile(wb, 'modelo-launchpad.xlsx');
+};
+
+function excelDataParaISO_LP(valor) {
+  if (!valor) return '';
+  if (valor instanceof Date) return valor.toISOString().split('T')[0];
+  if (typeof valor === 'number') { const d = XLSX.SSF.parse_date_code(valor); return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`; }
+  const s = String(valor).trim();
+  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  return s;
+}
+
+function normalizarLinhaLP(l) {
+  const get = (...keys) => { for (const k of Object.keys(l)) { const kn = k.trim().toLowerCase(); if (keys.some(x=>x.toLowerCase()===kn)) return l[k]; } return ''; };
+  return {
+    cliente: String(get('Cliente')||'').trim(),
+    conteudo: String(get('Conteúdo','Conteudo')||'').trim(),
+    data: get('Data'),
+    hora: String(get('Hora')||'09:00').trim(),
+    link: String(get('Link')||'').trim(),
+  };
+}
+
+function processarArquivoLP(file) {
+  document.getElementById('lp-dropzone-texto').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const linhas = XLSX.utils.sheet_to_json(sheet, {defval:''});
+      importPendenteLP = linhas.map(l => {
+        const n = normalizarLinhaLP(l);
+        const match = clientesLP.find(c=>c.nome.toLowerCase()===n.cliente.toLowerCase());
+        return {cliente: n.cliente, cliente_id: match?match.id:'', conteudo: n.conteudo, data: excelDataParaISO_LP(n.data), hora: n.hora||'09:00', link: n.link};
+      }).filter(l => l.conteudo);
+      if (!importPendenteLP.length) toast('Nenhuma linha reconhecida. Confira as colunas: Cliente, Conteúdo, Data, Hora, Link.', true);
+      renderPreviewImportLP();
+    } catch (err) { toast('Erro ao ler a planilha: '+err.message, true); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+window.lerArquivoLP = function(event) { const file = event.target.files[0]; if (file) processarArquivoLP(file); };
+window.handleDropLP = function(event) {
+  event.preventDefault();
+  document.getElementById('lp-dropzone').style.borderColor = 'var(--border2)';
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  document.getElementById('lp-file-input').value = '';
+  processarArquivoLP(file);
+};
+window.atualizarClienteImportLP = function(i, val) { importPendenteLP[i].cliente_id = val; renderPreviewImportLP(); };
+
+function renderPreviewImportLP() {
+  const tbody = document.getElementById('lp-preview-tbody');
+  const opcoesClientes = c => clientesLP.map(cl=>`<option value="${cl.id}" ${cl.id===c?'selected':''}>${cl.nome}</option>`).join('');
+  tbody.innerHTML = importPendenteLP.map((l,i) => {
+    const ok = !!l.cliente_id;
+    const resumo = l.conteudo.slice(0,40) + (l.conteudo.length>40?'…':'');
+    return `<tr><td><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${ok?'var(--accent)':'var(--yellow)'}"></span></td><td style="font-size:12px">${resumo}</td><td style="font-size:12px">${l.cliente}</td><td style="font-size:12px">${l.data}</td><td style="font-size:12px">${l.hora}</td><td>${ok?'<span style="color:var(--accent);font-size:11px">✓ cliente encontrado</span>':`<select style="font-size:11px;padding:4px 6px;width:auto" onchange="atualizarClienteImportLP(${i},this.value)"><option value="">— não encontrado, escolha —</option>${opcoesClientes('')}</select>`}</td></tr>`;
+  }).join('');
+  document.getElementById('lp-preview-wrap').style.display = 'block';
+  document.getElementById('btn-lp-confirmar-import').disabled = importPendenteLP.length === 0;
+}
+
+window.confirmarImportacaoLP = async function() {
+  const validas = importPendenteLP.filter(l=>l.cliente_id && l.conteudo);
+  if (!validas.length) return toast('Nenhuma linha válida (falta cliente ou conteúdo).', true);
+  const {data:{session}} = await db.auth.getSession();
+  const {data:importRow, error: errImport} = await db.from('launchpad_content_imports').insert({
+    cliente_id: validas[0].cliente_id, original_filename: document.getElementById('lp-dropzone-texto').textContent,
+    uploaded_by: session?.user?.id || null, total_rows: importPendenteLP.length, imported_rows: validas.length,
+    invalid_rows: importPendenteLP.length - validas.length, status: 'completed'
+  }).select().single();
+  if (errImport) return toast('Erro ao registrar importação: '+errImport.message, true);
+  const linhas = validas.map(l => {
+    let scheduledAt = null;
+    if (l.data) { const dt = new Date(`${l.data}T${l.hora||'09:00'}:00-03:00`); if (!isNaN(dt.getTime())) scheduledAt = dt.toISOString(); }
+    return {
+      cliente_id: l.cliente_id, content_import_id: importRow.id, content: l.conteudo, link: l.link || null,
+      source: 'import', status: 'pending_approval', timezone: 'America/Sao_Paulo', scheduled_at: scheduledAt,
+      created_by: session?.user?.id || null,
+    };
+  });
+  const {error} = await db.from('launchpad_posts').insert(linhas);
+  if (error) return toast('Erro ao importar posts: '+error.message, true);
+  toast(validas.length + ' post(s) importado(s) — aguardando aprovação.');
+  fecharModal('modal-lp-import');
+  carregarLaunchpad();
+};
+
+// Integrações (conexão real via LinkedIn OAuth quando configurado; simulada por padrão)
+window.abrirIntegracoesLP = async function() {
+  if (!clientesLP.length) await carregarClientesLP();
+  await carregarConexoesLP();
+  const lista = document.getElementById('lp-integracoes-lista');
+  lista.innerHTML = clientesLP.map(c => {
+    const conexao = conexoesLP.find(x=>x.cliente_id===c.id && x.connection_status==='connected');
+    if (conexao) {
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div><div style="font-size:13px;font-weight:500">${c.nome}</div><div style="font-size:11.5px;color:var(--muted2)">${conexao.account_name}${conexao.is_mock?' <span style="color:#f5a623">[SIMULADO]</span>':''}</div></div>
+        <button class="btn btn-danger" style="padding:5px 10px" onclick="desconectarLP('${conexao.id}')">Desconectar</button>
+      </div>`;
+    }
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:500">${c.nome}</div>
+      <button class="btn btn-outline" style="padding:5px 10px" onclick="conectarLinkedInLP('${c.id}')">Conectar (simulado)</button>
+    </div>`;
+  }).join('');
+};
+
+window.conectarLinkedInLP = async function(clienteId) {
+  const cliente = clientesLP.find(c=>c.id===clienteId);
+  const {error} = await db.from('launchpad_social_connections').insert({
+    cliente_id: clienteId, account_type: 'personal', is_mock: true, connection_status: 'connected',
+    external_account_id: 'mock-'+crypto.randomUUID().slice(0,8),
+    account_name: '[SIMULADO] Perfil do LinkedIn de '+(cliente?.nome||'')
+  });
+  if (error) return toast('Erro: '+error.message, true);
+  toast('Conta conectada em modo simulado.');
+  abrirIntegracoesLP();
+};
+
+window.desconectarLP = async function(id) {
+  if (!confirm('Desconectar esta conta?')) return;
+  const {error} = await db.from('launchpad_social_connections').update({connection_status:'disconnected'}).eq('id', id);
+  if (error) return toast('Erro: '+error.message, true);
+  toast('Conta desconectada.');
+  abrirIntegracoesLP();
+};
+
 window.addEventListener('resize',()=>{if(document.getElementById('page-dashboard').classList.contains('active'))carregarDashboard();});
 </script>
 </body>
