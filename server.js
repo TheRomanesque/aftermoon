@@ -129,7 +129,7 @@ async function finalizarConexaoLinkedIn(req, res, url) {
     });
     const perfil = userResp.data;
 
-    await supabase.from('launchpad_social_connections').upsert({
+    const { error: dbError } = await supabase.from('launchpad_social_connections').upsert({
       cliente_id: clienteId,
       platform: 'linkedin',
       account_type: accountType,
@@ -143,7 +143,14 @@ async function finalizarConexaoLinkedIn(req, res, url) {
       connection_status: 'connected',
       is_mock: false,
       updated_at: new Date().toISOString(),
-    });
+    }, { onConflict: 'cliente_id,platform,account_type' });
+
+    if (dbError) {
+      console.error('[LAUNCHPAD] Erro ao salvar conexao do LinkedIn no Supabase:', dbError.message);
+      res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end('<p>Login no LinkedIn funcionou, mas houve um erro ao salvar a conexão: ' + dbError.message + '. Tente novamente ou avise o suporte.</p>');
+      return;
+    }
 
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end('<p>Conta do LinkedIn conectada com sucesso! Pode fechar esta aba e voltar pro Orbit.</p>');
