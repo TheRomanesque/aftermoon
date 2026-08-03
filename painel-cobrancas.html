@@ -1931,9 +1931,11 @@ window.confirmarImportacaoLP = async function() {
   const linhas = validas.map(l => {
     let scheduledAt = null;
     if (l.data) { const dt = new Date(`${l.data}T${l.hora||'09:00'}:00-03:00`); if (!isNaN(dt.getTime())) scheduledAt = dt.toISOString(); }
+    const conexao = conexoesLP.find(c=>c.cliente_id===l.cliente_id && c.connection_status==='connected');
     return {
       cliente_id: l.cliente_id, content_import_id: importRow.id, content: l.conteudo, link: l.link || null,
       source: 'import', status: 'pending_approval', timezone: 'America/Sao_Paulo', scheduled_at: scheduledAt,
+      social_connection_id: conexao ? conexao.id : null,
       created_by: session?.user?.id || null,
     };
   });
