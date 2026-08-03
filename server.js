@@ -201,12 +201,18 @@ async function publicarNoLinkedInReal(post, conexao) {
     lifecycleState: 'PUBLISHED',
     isReshareDisabledByAuthor: false,
   };
+  // A API versionada do LinkedIn exige um header LinkedIn-Version no formato AAAAMM
+  // e so aceita versoes dos ultimos ~12 meses (fora disso responde 426 Upgrade Required).
+  // Calculamos o mes atual com uma folga de 60 dias pra garantir que a versao ja foi
+  // publicada pelo LinkedIn quando a chamada acontecer.
+  const dataVersao = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+  const versaoLinkedIn = `${dataVersao.getFullYear()}${String(dataVersao.getMonth() + 1).padStart(2, '0')}`;
   const resp = await axios.post('https://api.linkedin.com/rest/posts', body, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
       'X-Restli-Protocol-Version': '2.0.0',
-      'LinkedIn-Version': '202405',
+      'LinkedIn-Version': versaoLinkedIn,
     },
   });
   const urn = resp.headers['x-restli-id'] || resp.headers['x-linkedin-id'] || null;

@@ -481,17 +481,36 @@ textarea{resize:vertical;min-height:80px}
             <option value="pending_approval">Aguardando aprovação</option>
             <option value="approved">Aprovado</option>
             <option value="scheduled">Agendado</option>
-            <option value="published">Publicado</option>
             <option value="failed">Falhou</option>
             <option value="cancelled">Cancelado</option>
           </select>
           <select id="lp-filtro-cliente" onchange="carregarLaunchpad()" style="width:auto;padding:8px 10px"><option value="">Todos os clientes</option></select>
         </div>
-        <div class="table-card" style="overflow-x:auto">
-          <table>
-            <thead><tr><th>Cliente</th><th>Conteúdo</th><th>Conta</th><th>Status</th><th>Agendado para</th><th>Ações</th></tr></thead>
-            <tbody id="lp-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted)">Carregando...</td></tr></tbody>
-          </table>
+
+        <!-- TABS -->
+        <div style="display:flex;gap:22px;border-bottom:1px solid var(--border);margin-bottom:18px">
+          <div class="lp-tab active" id="lp-tab-ativos" onclick="mostrarAbaLP('ativos')" style="padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--yellow);font-weight:600;display:flex;align-items:center;gap:7px">Publicações <span id="lp-count-ativos" style="background:var(--yellow-dim);color:var(--yellow);font-size:10.5px;padding:1px 7px;border-radius:10px">0</span></div>
+          <div class="lp-tab" id="lp-tab-historico" onclick="mostrarAbaLP('historico')" style="padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600;display:flex;align-items:center;gap:7px">Histórico <span id="lp-count-historico" style="background:var(--surface2);color:var(--muted2);font-size:10.5px;padding:1px 7px;border-radius:10px">0</span></div>
+        </div>
+
+        <!-- PANE: ATIVOS -->
+        <div id="lp-pane-ativos">
+          <div class="table-card" style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Cliente</th><th>Conteúdo</th><th>Conta</th><th>Status</th><th>Agendado para</th><th>Ações</th></tr></thead>
+              <tbody id="lp-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted)">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PANE: HISTÓRICO -->
+        <div id="lp-pane-historico" style="display:none">
+          <div class="table-card" style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Cliente</th><th>Conteúdo</th><th>Conta</th><th>Publicado em</th><th></th></tr></thead>
+              <tbody id="lp-tbody-historico"><tr><td colspan="5" style="text-align:center;color:var(--muted)">Carregando...</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1602,7 +1621,7 @@ window.carregarLaunchpad = async function carregarLaunchpad() {
   await carregarClientesLP();
   await carregarConexoesLP();
   await carregarStatsLP();
-  let q = db.from('launchpad_posts').select('*, clientes(nome), launchpad_social_connections(account_name, is_mock)').is('deleted_at', null).order('created_at', {ascending:false});
+  let q = db.from('launchpad_posts').select('*, clientes(nome), launchpad_social_connections(account_name, is_mock)').is('deleted_at', null).neq('status', 'published').order('created_at', {ascending:false});
   const filtroStatus = document.getElementById('lp-filtro-status').value;
   const filtroCliente = document.getElementById('lp-filtro-cliente').value;
   if (filtroStatus) q = q.eq('status', filtroStatus);
@@ -1611,9 +1630,39 @@ window.carregarLaunchpad = async function carregarLaunchpad() {
   const tbody = document.getElementById('lp-tbody');
   if (error) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red)">Erro ao carregar: '+error.message+'</td></tr>'; return; }
   postsLP = data || [];
+  document.getElementById('lp-count-ativos').textContent = postsLP.length;
   if (!postsLP.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Nenhum post encontrado.</td></tr>'; return; }
   tbody.innerHTML = postsLP.map(renderLinhaLP).join('');
 }
+
+window.mostrarAbaLP = function(aba) {
+  document.getElementById('lp-pane-ativos').style.display = aba==='ativos' ? 'block' : 'none';
+  document.getElementById('lp-pane-historico').style.display = aba==='historico' ? 'block' : 'none';
+  document.getElementById('lp-tab-ativos').style.cssText = aba==='ativos' ? 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--yellow);font-weight:600;display:flex;align-items:center;gap:7px' : 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600;display:flex;align-items:center;gap:7px';
+  document.getElementById('lp-tab-historico').style.cssText = aba==='historico' ? 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--yellow);font-weight:600;display:flex;align-items:center;gap:7px' : 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600;display:flex;align-items:center;gap:7px';
+  if (aba==='historico') carregarHistoricoLP();
+};
+
+window.carregarHistoricoLP = async function carregarHistoricoLP() {
+  const tbody = document.getElementById('lp-tbody-historico');
+  const {data, error} = await db.from('launchpad_posts').select('*, clientes(nome), launchpad_social_connections(account_name, is_mock)').eq('status', 'published').is('deleted_at', null).order('published_at', {ascending:false}).limit(50);
+  document.getElementById('lp-count-historico').textContent = data?.length || 0;
+  if (error) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red)">Erro ao carregar: '+error.message+'</td></tr>'; return; }
+  if (!data?.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Nenhuma publicação feita ainda.</td></tr>'; return; }
+  tbody.innerHTML = data.map(p => {
+    const conta = p.launchpad_social_connections;
+    const conteudoResumo = (p.content||'').slice(0,70) + ((p.content||'').length > 70 ? '…' : '');
+    const publicadoEm = p.published_at ? new Date(p.published_at).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '—';
+    const acao = p.external_post_url ? `<a class="btn btn-outline" style="padding:5px 10px" href="${p.external_post_url}" target="_blank">Ver no LinkedIn</a>` : `<span style="font-size:11px;color:var(--muted2)">[SIMULADO] publicado</span>`;
+    return `<tr>
+      <td>${p.clientes?.nome || '—'}</td>
+      <td style="max-width:260px">${conteudoResumo}</td>
+      <td style="font-size:12px">${conta?.account_name || '—'}${conta?.is_mock ? ' <span style="color:#f5a623">[SIM]</span>' : ''}</td>
+      <td style="font-size:12px">${publicadoEm}</td>
+      <td>${acao}</td>
+    </tr>`;
+  }).join('');
+};
 
 function renderLinhaLP(p) {
   const conta = p.launchpad_social_connections;
@@ -1623,9 +1672,9 @@ function renderLinhaLP(p) {
   if (p.status === 'pending_approval') {
     acoes += `<button class="btn btn-primary" style="padding:5px 10px" onclick="aprovarPostLP('${p.id}')">Aprovar</button><button class="btn btn-danger" style="padding:5px 10px" onclick="reprovarPostLP('${p.id}')">Reprovar</button>`;
   } else if (p.status === 'approved') {
-    acoes += `<button class="btn btn-primary" style="padding:5px 10px" onclick="abrirAgendarLP('${p.id}')">Agendar</button>`;
+    acoes += `<button class="btn btn-primary" style="padding:5px 10px" onclick="abrirAgendarLP('${p.id}')">Agendar</button><button class="btn btn-outline" style="padding:5px 10px" onclick="postarAgoraLP('${p.id}')">Postar agora</button>`;
   } else if (p.status === 'scheduled') {
-    acoes += `<button class="btn btn-outline" style="padding:5px 10px" onclick="abrirAgendarLP('${p.id}')">Reagendar</button><button class="btn btn-danger" style="padding:5px 10px" onclick="cancelarPostLP('${p.id}')">Cancelar</button>`;
+    acoes += `<button class="btn btn-outline" style="padding:5px 10px" onclick="abrirAgendarLP('${p.id}')">Reagendar</button><button class="btn btn-outline" style="padding:5px 10px" onclick="postarAgoraLP('${p.id}')">Postar agora</button><button class="btn btn-danger" style="padding:5px 10px" onclick="cancelarPostLP('${p.id}')">Cancelar</button>`;
   } else if (p.status === 'failed') {
     acoes += `<button class="btn btn-primary" style="padding:5px 10px" onclick="tentarNovamenteLP('${p.id}')">Tentar novamente</button>`;
   } else if (p.status === 'published') {
@@ -1754,6 +1803,16 @@ window.confirmarAgendamentoLP = async function() {
   if (error) return toast('Erro: '+error.message, true);
   toast('Publicação agendada.');
   fecharModal('modal-lp-agendar');
+  await carregarLaunchpad();
+};
+
+window.postarAgoraLP = async function(id) {
+  const p = postsLP.find(x=>x.id===id);
+  if (!p?.social_connection_id) { toast('Este post não tem conta do LinkedIn vinculada. Edite o post e escolha uma conta antes de publicar.', true); return; }
+  if (!confirm('Publicar este post agora, fora do agendamento? Deve sair em até 2 minutos.')) return;
+  const {error} = await db.from('launchpad_posts').update({status:'scheduled', scheduled_at: new Date().toISOString()}).eq('id', id);
+  if (error) return toast('Erro: '+error.message, true);
+  toast('Publicação enviada para a fila — deve sair em até 2 minutos.');
   await carregarLaunchpad();
 };
 
