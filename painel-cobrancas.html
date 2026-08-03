@@ -281,7 +281,7 @@ textarea{resize:vertical;min-height:80px}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
       Ground Control
     </div>
-    <div class="nav-item" onclick="showPage('launchpad')">
+    <div class="nav-item nav-lp" onclick="showPage('launchpad')" style="color:var(--yellow);position:relative">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       Launchpad
     </div>
@@ -761,7 +761,7 @@ textarea{resize:vertical;min-height:80px}
 <div class="modal-bg" id="modal-lp-integracoes">
   <div class="modal" style="width:520px">
     <div class="modal-header"><div class="modal-title">Contas conectadas</div><button class="modal-close" onclick="fecharModal('modal-lp-integracoes')">✕</button></div>
-    <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">Sem o app do LinkedIn configurado em produção, a conexão fica em <strong style="color:#f5a623">modo simulado</strong> — nada é publicado de verdade até isso ser configurado.</p>
+    <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">Clique em "Conectar via LinkedIn" para autorizar a conta real do cliente (você será levado ao login oficial do LinkedIn). A opção "Simular" cria uma conexão de teste marcada <strong style="color:#f5a623">[SIMULADO]</strong> — nunca publica de verdade.</p>
     <div id="lp-integracoes-lista"></div>
   </div>
 </div>
@@ -1631,6 +1631,7 @@ function renderLinhaLP(p) {
   } else if (p.status === 'published') {
     acoes = p.external_post_url ? `<a class="btn btn-outline" style="padding:5px 10px" href="${p.external_post_url}" target="_blank">Ver no LinkedIn</a>` : `<span style="font-size:11px;color:var(--muted2)">[SIMULADO] publicado</span>`;
   }
+  acoes += `<button class="btn btn-ghost" style="padding:5px 8px;color:var(--red)" onclick="apagarPostLP('${p.id}')" title="Apagar">🗑</button>`;
   return `<tr>
     <td>${p.clientes?.nome || '—'}</td>
     <td style="max-width:260px">${conteudoResumo}</td>
@@ -1764,6 +1765,14 @@ window.cancelarPostLP = async function(id) {
   await carregarLaunchpad();
 };
 
+window.apagarPostLP = async function(id) {
+  if (!confirm('Apagar este post/agendamento? Ele some da lista e não pode ser desfeito por aqui.')) return;
+  const {error} = await db.from('launchpad_posts').update({deleted_at: new Date().toISOString()}).eq('id', id);
+  if (error) return toast('Erro: '+error.message, true);
+  toast('Post apagado.');
+  await carregarLaunchpad();
+};
+
 window.tentarNovamenteLP = async function(id) {
   const {error} = await db.from('launchpad_posts').update({status:'scheduled', scheduled_at: new Date().toISOString()}).eq('id', id);
   if (error) return toast('Erro: '+error.message, true);
@@ -1891,9 +1900,13 @@ window.abrirIntegracoesLP = async function() {
     }
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
       <div style="font-size:13px;font-weight:500">${c.nome}</div>
-      <button class="btn btn-outline" style="padding:5px 10px" onclick="conectarLinkedInLP('${c.id}')">Conectar (simulado)</button>
+      <div class="btn-group">
+        <button class="btn btn-primary" style="padding:5px 10px" onclick="window.location.href='/api/launchpad/linkedin/connect?clienteId=${c.id}&accountType=personal'">Conectar via LinkedIn</button>
+        <button class="btn btn-ghost" style="padding:5px 8px;font-size:11px" onclick="conectarLinkedInLP('${c.id}')" title="Cria uma conexão de teste, não publica de verdade">Simular</button>
+      </div>
     </div>`;
   }).join('');
+  abrirModal('modal-lp-integracoes');
 };
 
 window.conectarLinkedInLP = async function(clienteId) {
