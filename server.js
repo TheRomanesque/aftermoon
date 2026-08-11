@@ -42,10 +42,12 @@ async function confirmarEntrega(messageId, tentativas = 4, intervaloMs = 5000) {
         { where: { key: { id: messageId } } },
         { headers: { apikey: EVOLUTION_KEY } }
       );
-      const status = data?.[0]?.MessageUpdate?.slice(-1)?.[0]?.status
-        || data?.[0]?.status;
-      if (status === 'DELIVERY_ACK' || status === 'READ') return true;
-    } catch (e) { /* tenta de novo na próxima volta */ }
+      const registros = data?.messages?.records || [];
+      const registro = registros.find(r => r.key?.id === messageId) || registros[0];
+      const statusHist = (registro?.MessageUpdate || []).map(m => m.status);
+      const statusDireto = registro?.status;
+      if (statusHist.includes('DELIVERY_ACK') || statusHist.includes('READ') || statusDireto === 'DELIVERY_ACK' || statusDireto === 'READ') return true;
+    } catch (e) { /* tenta de novo na proxima volta */ }
   }
   return false;
 }
