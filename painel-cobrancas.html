@@ -228,6 +228,22 @@ textarea{resize:vertical;min-height:80px}
 .cliente-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
 .cliente-card-stat{font-size:11px;color:var(--muted2)}
 .cliente-card-stat strong{color:var(--text);font-size:13px;display:block;font-family:'Syne',sans-serif}
+.cal-input{cursor:pointer}
+.cal-popup{position:absolute;z-index:500;background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:12px;width:240px;box-shadow:0 12px 32px #000000aa;font-size:12px}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px}
+.cal-header button{background:var(--surface2);border:1px solid var(--border2);color:var(--text);width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
+.cal-header button:hover{color:var(--accent);border-color:var(--accent)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.cal-grid-dow{color:var(--muted2);font-size:10px;margin-bottom:4px}
+.cal-day{padding:5px 0;border-radius:6px;cursor:pointer;color:var(--text)}
+.cal-day:hover{background:var(--surface2)}
+.cal-day-empty{cursor:default}
+.cal-day-empty:hover{background:none}
+.cal-day-today{color:var(--accent);font-weight:700;box-shadow:inset 0 0 0 1px var(--accent)}
+.cal-day-sel{background:var(--accent);color:#04140c;font-weight:700}
+.cal-footer{display:flex;justify-content:space-between;gap:6px;margin-top:10px}
+.cal-footer button{flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px;border-radius:6px;cursor:pointer;font-size:11px}
+.cal-footer button:hover{color:var(--accent);border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -310,7 +326,7 @@ textarea{resize:vertical;min-height:80px}
         </div>
         <div class="topbar-title" id="topbar-title">Painel</div>
       </div>
-      <button class="btn btn-primary btn-lg" onclick="showPage('nova')">
+      <button class="btn btn-primary btn-lg" id="topbar-nova-btn" onclick="showPage('nova')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nova cobrança
       </button>
@@ -701,7 +717,7 @@ textarea{resize:vertical;min-height:80px}
       <select id="gc-novo-cliente"><option value="">Selecione o cliente</option></select>
     </div>
     <div class="grid2">
-      <div class="field"><label>Data</label><input type="date" id="gc-novo-data"></div>
+      <div class="field"><label>Data</label><input type="text" class="cal-input" id="gc-novo-data" readonly onclick="mcOpenCalendar(this)" placeholder="Selecionar data"></div>
       <div class="field"><label>Tipo</label>
         <select id="gc-novo-tipo"><option>Stories</option><option>Feed</option><option>Reels</option><option>Vídeo</option></select>
       </div>
@@ -783,7 +799,7 @@ textarea{resize:vertical;min-height:80px}
   <div class="modal" style="width:420px">
     <div class="modal-header"><div class="modal-title">Agendar publicação</div><button class="modal-close" onclick="fecharModal('modal-lp-agendar')">✕</button></div>
     <input type="hidden" id="lp-agendar-id">
-    <div class="field"><label>Data</label><input type="date" id="lp-agendar-data"></div>
+    <div class="field"><label>Data</label><input type="text" class="cal-input" id="lp-agendar-data" readonly onclick="mcOpenCalendar(this)" placeholder="Selecionar data"></div>
     <div class="field"><label>Hora (horário de Brasília)</label><input type="time" id="lp-agendar-hora" value="09:00"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModal('modal-lp-agendar')">Cancelar</button>
@@ -834,7 +850,7 @@ textarea{resize:vertical;min-height:80px}
     <div style="font-size:12px;color:var(--muted2);margin-bottom:14px" id="mc-detalhe-subtitulo"></div>
     <div class="grid2">
       <div class="field"><label>Responsável</label><select id="mc-detalhe-responsavel"><option value="">— ninguém —</option></select></div>
-      <div class="field"><label>Prazo</label><input type="date" id="mc-detalhe-prazo"></div>
+      <div class="field"><label>Prazo</label><input type="text" class="cal-input" id="mc-detalhe-prazo" readonly onclick="mcOpenCalendar(this)" placeholder="Selecionar data"></div>
     </div>
     <div class="field"><label>Anotações</label><textarea id="mc-detalhe-notas" rows="3" placeholder="Escreva uma anotação sobre esta mission..."></textarea></div>
     <div class="field">
@@ -845,8 +861,9 @@ textarea{resize:vertical;min-height:80px}
         <button class="btn btn-outline" onclick="adicionarTarefaMC()">+ Adicionar</button>
       </div>
     </div>
-    <div class="form-actions">
+    <div class="form-actions" style="flex-wrap:wrap;gap:8px">
       <button class="btn btn-outline" onclick="excluirMissionMC()" style="color:var(--red)">Excluir mission</button>
+      <button class="btn btn-outline" onclick="enviarAgoraMC()" style="color:var(--blue)">📲 Enviar agora</button>
       <button class="btn btn-primary" onclick="salvarDetalheMC()">Salvar</button>
     </div>
   </div>
@@ -862,7 +879,7 @@ textarea{resize:vertical;min-height:80px}
       <div class="field"><label>Cliente</label><select id="mc-novo-cliente"><option value="">— nenhum —</option></select></div>
       <div class="field"><label>Responsável</label><select id="mc-novo-responsavel"><option value="">— ninguém —</option></select></div>
     </div>
-    <div class="field"><label>Prazo</label><input type="date" id="mc-novo-prazo"></div>
+    <div class="field"><label>Prazo</label><input type="text" class="cal-input" id="mc-novo-prazo" readonly onclick="mcOpenCalendar(this)" placeholder="Selecionar data"></div>
     <div class="form-actions">
       <button class="btn btn-outline" onclick="fecharModal('modal-mc-nova')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarNovaMissionMC()">Criar mission</button>
@@ -906,6 +923,105 @@ const toast = (msg,err=false) => {
 const iniciais = n => n.split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();
 const fmtData = s => { const [y,m,d]=s.split('-'); return `${d}/${m}/${y}`; };
 const hoje = () => new Date().toISOString().split('T')[0];
+
+// ===== CALENDAR PICKER =====
+let calPickerTarget = null;
+let calPickerDate = new Date();
+const pad2 = n => String(n).padStart(2,'0');
+
+function mcSetDate(inputId, isoStr) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  el.dataset.iso = isoStr || '';
+  el.value = isoStr ? fmtData(isoStr) : '';
+}
+function mcGetDate(inputId) {
+  const el = document.getElementById(inputId);
+  return (el && el.dataset.iso) || '';
+}
+
+window.mcOpenCalendar = function(el) {
+  closeCalPicker();
+  calPickerTarget = el;
+  const iso = el.dataset.iso;
+  calPickerDate = iso ? new Date(iso+'T00:00:00') : new Date();
+  const pop = document.createElement('div');
+  pop.className = 'cal-popup';
+  pop.id = 'cal-popup-active';
+  document.body.appendChild(pop);
+  renderCalPicker();
+  const rect = el.getBoundingClientRect();
+  pop.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+  pop.style.left = (rect.left + window.scrollX) + 'px';
+  setTimeout(() => document.addEventListener('click', calOutsideClick), 0);
+};
+
+function calOutsideClick(e) {
+  const pop = document.getElementById('cal-popup-active');
+  if (pop && !pop.contains(e.target) && e.target !== calPickerTarget) closeCalPicker();
+}
+
+window.closeCalPicker = function() {
+  const pop = document.getElementById('cal-popup-active');
+  if (pop) pop.remove();
+  document.removeEventListener('click', calOutsideClick);
+  calPickerTarget = null;
+};
+
+function renderCalPicker() {
+  const pop = document.getElementById('cal-popup-active');
+  if (!pop) return;
+  const y = calPickerDate.getFullYear(), m = calPickerDate.getMonth();
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const first = new Date(y, m, 1);
+  const startDow = first.getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const hj = new Date();
+  const hojeStr = `${hj.getFullYear()}-${pad2(hj.getMonth()+1)}-${pad2(hj.getDate())}`;
+  const selIso = (calPickerTarget && calPickerTarget.dataset.iso) || '';
+  let cells = '';
+  for (let i=0;i<startDow;i++) cells += '<div class="cal-day cal-day-empty"></div>';
+  for (let d=1; d<=daysInMonth; d++) {
+    const iso = `${y}-${pad2(m+1)}-${pad2(d)}`;
+    const isToday = iso === hojeStr;
+    const isSel = iso === selIso;
+    cells += `<div class="cal-day${isToday?' cal-day-today':''}${isSel?' cal-day-sel':''}" onclick="calPickDay(${d})">${d}</div>`;
+  }
+  pop.innerHTML = `
+    <div class="cal-header">
+      <button type="button" onclick="calNavMonth(-1)">‹</button>
+      <span>${meses[m]} ${y}</span>
+      <button type="button" onclick="calNavMonth(1)">›</button>
+    </div>
+    <div class="cal-grid cal-grid-dow"><div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div></div>
+    <div class="cal-grid">${cells}</div>
+    <div class="cal-footer"><button type="button" onclick="calPickToday()">Hoje</button><button type="button" onclick="calPickClear()">Limpar</button></div>
+  `;
+}
+
+window.calNavMonth = function(delta) {
+  calPickerDate = new Date(calPickerDate.getFullYear(), calPickerDate.getMonth()+delta, 1);
+  renderCalPicker();
+};
+
+window.calPickDay = function(d) {
+  const y = calPickerDate.getFullYear(), m = calPickerDate.getMonth();
+  const iso = `${y}-${pad2(m+1)}-${pad2(d)}`;
+  mcSetDate(calPickerTarget.id, iso);
+  closeCalPicker();
+};
+
+window.calPickToday = function() {
+  const hj = new Date();
+  const iso = `${hj.getFullYear()}-${pad2(hj.getMonth()+1)}-${pad2(hj.getDate())}`;
+  mcSetDate(calPickerTarget.id, iso);
+  closeCalPicker();
+};
+
+window.calPickClear = function() {
+  mcSetDate(calPickerTarget.id, '');
+  closeCalPicker();
+};
 const fmtBRL = v => 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
 const fmtBRLShort = v => v>=1000?'R$'+(v/1000).toFixed(0)+'k':'R$'+v.toFixed(0);
 window.fecharModal = id => document.getElementById(id).classList.remove('open');
@@ -970,6 +1086,7 @@ window.showPage = function(id) {
   document.getElementById('page-'+id).classList.add('active');
   document.getElementById('topbar-title').textContent = TITLES[id]||'';
   document.getElementById('topbar-back').style.display = id==='perfil' ? 'flex' : 'none';
+  document.getElementById('topbar-nova-btn').style.display = ['dashboard','clientes','perfil','cobrancas','faturamento'].includes(id) ? 'flex' : 'none';
   document.querySelectorAll('.nav-item').forEach(n=>{
     const t=n.textContent.trim().toLowerCase();
     if((id==='dashboard'&&t==='painel')||(id==='clientes'&&t==='clientes')||(id==='cobrancas'&&t==='cobranças')||(id==='nova'&&t.includes('nova'))||(id==='groundcontrol'&&t.includes('ground'))||(id==='faturamento'&&t==='faturamento')||(id==='launchpad'&&t==='launchpad')||(id==='missioncontrol'&&t.includes('mission'))) n.classList.add('active');
@@ -1282,12 +1399,12 @@ window.abrirEditarParcelas = async function(cobId,jobNome) {
   document.getElementById('edit-parcelas-lista').innerHTML=`
     <p style="font-size:12px;color:var(--muted2);margin-bottom:16px">Job: <strong style="color:var(--text)">${jobNome}</strong></p>
     ${data.map(p=>`<div class="parcela-row"><div class="parcela-num">${p.numero}</div>
-    <input type="date" id="ep-d-${p.id}" value="${p.data_vencimento}">
+    <input type="text" class="cal-input" id="ep-d-${p.id}" data-iso="${p.data_vencimento}" value="${fmtData(p.data_vencimento)}" readonly onclick="mcOpenCalendar(this)">
     <input type="number" id="ep-v-${p.id}" value="${p.valor}"></div>`).join('')}`;
   abrirModal('modal-editar-parcelas');
 };
 window.salvarEdicaoParcelas = async function() {
-  for(const p of parcelasEdit) await db.from('parcelas').update({data_vencimento:document.getElementById(`ep-d-${p.id}`).value,valor:parseFloat(document.getElementById(`ep-v-${p.id}`).value)}).eq('id',p.id);
+  for(const p of parcelasEdit) await db.from('parcelas').update({data_vencimento:mcGetDate(`ep-d-${p.id}`),valor:parseFloat(document.getElementById(`ep-v-${p.id}`).value)}).eq('id',p.id);
   fecharModal('modal-editar-parcelas');toast('Parcelas atualizadas');carregarDashboard();
   if(document.getElementById('page-cobrancas').classList.contains('active')) carregarCobrancas();
 };
@@ -1359,7 +1476,8 @@ window.gerarParcelas = function() {
   const hj=new Date();let html='';
   for(let i=1;i<=n;i++){
     const d=new Date(hj);d.setMonth(d.getMonth()+(i-1));
-    html+=`<div class="parcela-row"><div class="parcela-num">${i}</div><input type="date" id="parc-d-${i}" value="${d.toISOString().split('T')[0]}"><input type="number" id="parc-v-${i}" value="${(total/n).toFixed(2)}"></div>`;
+    const isoP = d.toISOString().split('T')[0];
+    html+=`<div class="parcela-row"><div class="parcela-num">${i}</div><input type="text" class="cal-input" id="parc-d-${i}" data-iso="${isoP}" value="${fmtData(isoP)}" readonly onclick="mcOpenCalendar(this)"><input type="number" id="parc-v-${i}" value="${(total/n).toFixed(2)}"></div>`;
   }
   document.getElementById('parcelas-lista').innerHTML=html;
 };
@@ -1381,7 +1499,7 @@ window.salvarCobranca = async function() {
   const {data:cob,error:e2}=await db.from('cobrancas').insert({cliente_id:cliId,job:jobNome,valor_total:total,total_parcelas:nP}).select().single();
   if(e2){toast('Erro: '+e2.message,true);btn.textContent='✓ Salvar cobrança';return;}
   const parcelas=[];
-  for(let i=1;i<=nP;i++) parcelas.push({cobranca_id:cob.id,numero:i,valor:parseFloat(document.getElementById(`parc-v-${i}`).value),data_vencimento:document.getElementById(`parc-d-${i}`).value,enviada:false});
+  for(let i=1;i<=nP;i++) parcelas.push({cobranca_id:cob.id,numero:i,valor:parseFloat(document.getElementById(`parc-v-${i}`).value),data_vencimento:mcGetDate(`parc-d-${i}`),enviada:false});
   await db.from('parcelas').insert(parcelas);
   toast('Cobrança salva!');btn.textContent='✓ Salvar cobrança';
   document.getElementById('job-nome').value='';document.getElementById('job-total').value='';
@@ -1483,7 +1601,7 @@ function montarPreviewGC(){
 window.abrirNovoConteudoGC = function(){
   document.getElementById('gc-novo-id').value='';
   document.getElementById('gc-novo-cliente').value='';
-  document.getElementById('gc-novo-data').value=hoje();
+  mcSetDate('gc-novo-data', hoje());
   document.getElementById('gc-novo-tipo').value='Stories';
   document.getElementById('gc-novo-tema').value='';
   document.getElementById('gc-novo-territorio').value='';
@@ -1496,7 +1614,7 @@ window.abrirNovoConteudoGC = function(){
 window.abrirEditarConteudoGC = function(item){
   document.getElementById('gc-novo-id').value=item.id;
   document.getElementById('gc-novo-cliente').value=item.cliente_id;
-  document.getElementById('gc-novo-data').value=item.data;
+  mcSetDate('gc-novo-data', item.data);
   document.getElementById('gc-novo-tipo').value=item.tipo;
   document.getElementById('gc-novo-tema').value=item.tema;
   document.getElementById('gc-novo-territorio').value=item.territorio||'';
@@ -1509,7 +1627,7 @@ window.abrirEditarConteudoGC = function(item){
 window.salvarConteudoGC = async function(){
   const id = document.getElementById('gc-novo-id').value;
   const cliente_id = document.getElementById('gc-novo-cliente').value;
-  const data_ = document.getElementById('gc-novo-data').value;
+  const data_ = mcGetDate('gc-novo-data');
   const tipo = document.getElementById('gc-novo-tipo').value;
   const tema = document.getElementById('gc-novo-tema').value.trim();
   const territorio = document.getElementById('gc-novo-territorio').value.trim();
@@ -1882,10 +2000,10 @@ window.abrirAgendarLP = function(id) {
   if (!p?.social_connection_id) { toast('Este post não tem conta do LinkedIn vinculada. Edite o post e escolha uma conta antes de agendar.', true); return; }
   if (p?.scheduled_at) {
     const d = new Date(p.scheduled_at);
-    document.getElementById('lp-agendar-data').value = new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo', year:'numeric', month:'2-digit', day:'2-digit'}).format(d);
+    mcSetDate('lp-agendar-data', new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo', year:'numeric', month:'2-digit', day:'2-digit'}).format(d));
     document.getElementById('lp-agendar-hora').value = new Intl.DateTimeFormat('pt-BR', {timeZone:'America/Sao_Paulo', hour:'2-digit', minute:'2-digit', hour12:false}).format(d);
   } else {
-    document.getElementById('lp-agendar-data').value = '';
+    mcSetDate('lp-agendar-data', '');
     document.getElementById('lp-agendar-hora').value = '09:00';
   }
   abrirModal('modal-lp-agendar');
@@ -1893,7 +2011,7 @@ window.abrirAgendarLP = function(id) {
 
 window.confirmarAgendamentoLP = async function() {
   const id = document.getElementById('lp-agendar-id').value;
-  const data = document.getElementById('lp-agendar-data').value;
+  const data = mcGetDate('lp-agendar-data');
   const hora = document.getElementById('lp-agendar-hora').value;
   if (!data || !hora) return toast('Escolha data e hora.', true);
   const scheduledAt = new Date(`${data}T${hora}:00-03:00`);
@@ -2220,7 +2338,7 @@ window.abrirNovaMissionMC = function() {
   document.getElementById('mc-novo-subtitulo').value = '';
   document.getElementById('mc-novo-cliente').value = '';
   document.getElementById('mc-novo-responsavel').value = '';
-  document.getElementById('mc-novo-prazo').value = '';
+  mcSetDate('mc-novo-prazo', '');
   abrirModal('modal-mc-nova');
 };
 
@@ -2232,7 +2350,7 @@ window.salvarNovaMissionMC = async function() {
     subtitulo: document.getElementById('mc-novo-subtitulo').value.trim() || null,
     cliente_id: document.getElementById('mc-novo-cliente').value || null,
     responsavel_id: document.getElementById('mc-novo-responsavel').value || null,
-    prazo: document.getElementById('mc-novo-prazo').value || null,
+    prazo: mcGetDate('mc-novo-prazo') || null,
     status: 'backlog',
     ordem: missionsMC.length,
   };
@@ -2250,7 +2368,7 @@ window.abrirDetalheMC = function(id) {
   document.getElementById('mc-detalhe-titulo').textContent = m.titulo;
   document.getElementById('mc-detalhe-subtitulo').textContent = [m.subtitulo, m.clientes?.nome].filter(Boolean).join(' · ');
   document.getElementById('mc-detalhe-responsavel').value = m.responsavel_id || '';
-  document.getElementById('mc-detalhe-prazo').value = m.prazo || '';
+  mcSetDate('mc-detalhe-prazo', m.prazo || '');
   document.getElementById('mc-detalhe-notas').value = m.notas || '';
   renderChecklistMC();
   abrirModal('modal-mc-detalhe');
@@ -2288,10 +2406,30 @@ window.adicionarTarefaMC = async function() {
   renderMissionControlMC();
 };
 
+
+window.enviarAgoraMC = async function() {
+  if (!missionAtualMC) return;
+  const respId = document.getElementById('mc-detalhe-responsavel').value;
+  const pessoa = equipeMC.find(p => p.id === respId);
+  if (!pessoa || !pessoa.telefone) { toast('Escolha um responsável com WhatsApp cadastrado antes de enviar.', true); return; }
+  const tarefas = (missionAtualMC.mission_control_tasks || []).filter(t => !t.concluida);
+  const linhasTarefas = tarefas.length ? tarefas.map(t => `• ${t.titulo}`).join('\n') : 'Nenhuma tarefa pendente.';
+  const clienteLinha = missionAtualMC.clientes?.nome ? `Cliente: ${missionAtualMC.clientes.nome}\n` : '';
+  const prazoLinha = missionAtualMC.prazo ? `Prazo: ${fmtPrazoMC(missionAtualMC.prazo)}\n` : '';
+  const msg = `📋 *${missionAtualMC.titulo}*\n${clienteLinha}${prazoLinha}\n${linhasTarefas}`;
+  try {
+    const res = await fetch(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`,{method:'POST',headers:{'Content-Type':'application/json','apikey':EVOLUTION_KEY},body:JSON.stringify({number:pessoa.telefone,text:msg})});
+    if (!res.ok) throw new Error('status ' + res.status);
+    toast(`WhatsApp enviado para ${pessoa.nome}.`);
+  } catch (e) {
+    toast('Erro ao enviar WhatsApp: ' + e.message, true);
+  }
+};
+
 window.salvarDetalheMC = async function() {
   const payload = {
     responsavel_id: document.getElementById('mc-detalhe-responsavel').value || null,
-    prazo: document.getElementById('mc-detalhe-prazo').value || null,
+    prazo: mcGetDate('mc-detalhe-prazo') || null,
     notas: document.getElementById('mc-detalhe-notas').value || null,
     updated_at: new Date().toISOString(),
   };
