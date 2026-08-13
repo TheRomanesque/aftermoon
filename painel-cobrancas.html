@@ -285,6 +285,10 @@ textarea{resize:vertical;min-height:80px}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       Launchpad
     </div>
+    <div class="nav-item nav-mc" onclick="showPage('missioncontrol')" style="color:var(--blue);position:relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Mission Control
+    </div>
     <div class="sidebar-footer">
       <div class="user-card">
         <div class="user-avatar" id="sidebar-avatar">L</div>
@@ -509,6 +513,44 @@ textarea{resize:vertical;min-height:80px}
             <table>
               <thead><tr><th>Cliente</th><th>Conteúdo</th><th>Conta</th><th>Publicado em</th><th></th></tr></thead>
               <tbody id="lp-tbody-historico"><tr><td colspan="5" style="text-align:center;color:var(--muted)">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MISSION CONTROL --><div class="page" id="page-missioncontrol">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="abrirNovaMissionMC()">+ Nova mission</button>
+          <button class="btn btn-outline" onclick="abrirEquipeMC()">Equipe</button>
+          <select id="mc-filtro-cliente" onchange="renderMissionControlMC()" style="margin-left:auto;width:auto;padding:8px 10px"><option value="">Todos os clientes</option></select>
+        </div>
+        <div style="display:flex;gap:22px;border-bottom:1px solid var(--border);margin-bottom:18px">
+          <div class="mc-tab active" id="mc-tab-board" onclick="mostrarAbaMC('board')" style="padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--blue);font-weight:600">Board</div>
+          <div class="mc-tab" id="mc-tab-historico" onclick="mostrarAbaMC('historico')" style="padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600">Histórico <span id="mc-count-historico" style="background:var(--surface2);color:var(--muted2);font-size:10.5px;padding:1px 7px;border-radius:10px">0</span></div>
+        </div>
+        <div id="mc-pane-board" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+          <div class="mc-col" data-status="backlog">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);margin-bottom:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--muted2)"></span>Backlog<span class="mc-count" style="margin-left:auto">0</span></div>
+            <div class="mc-drop" data-status="backlog" style="min-height:60px;display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+          <div class="mc-col" data-status="semana">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);margin-bottom:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--blue)"></span>Esta semana<span class="mc-count" style="margin-left:auto">0</span></div>
+            <div class="mc-drop" data-status="semana" style="min-height:60px;display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+          <div class="mc-col" data-status="andamento">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);margin-bottom:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--orange)"></span>Em andamento<span class="mc-count" style="margin-left:auto">0</span></div>
+            <div class="mc-drop" data-status="andamento" style="min-height:60px;display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+          <div class="mc-col" data-status="concluido">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);margin-bottom:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent)"></span>Concluído<span class="mc-count" style="margin-left:auto">0</span></div>
+            <div class="mc-drop" data-status="concluido" style="min-height:60px;display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+        </div>
+        <div id="mc-pane-historico" style="display:none">
+          <div class="table-card" style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Mission</th><th>Cliente</th><th>Responsável</th><th>Concluída em</th></tr></thead>
+              <tbody id="mc-tbody-historico"><tr><td colspan="4" style="text-align:center;color:var(--muted)">Carregando...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -785,6 +827,63 @@ textarea{resize:vertical;min-height:80px}
   </div>
 </div>
 
+<!-- MISSION CONTROL: DETALHE -->
+<div class="modal-bg" id="modal-mc-detalhe">
+  <div class="modal" style="width:480px">
+    <div class="modal-header"><div class="modal-title" id="mc-detalhe-titulo">Mission</div><button class="modal-close" onclick="fecharModal('modal-mc-detalhe')">✕</button></div>
+    <div style="font-size:12px;color:var(--muted2);margin-bottom:14px" id="mc-detalhe-subtitulo"></div>
+    <div class="grid2">
+      <div class="field"><label>Responsável</label><select id="mc-detalhe-responsavel"><option value="">— ninguém —</option></select></div>
+      <div class="field"><label>Prazo</label><input type="date" id="mc-detalhe-prazo"></div>
+    </div>
+    <div class="field"><label>Anotações</label><textarea id="mc-detalhe-notas" rows="3" placeholder="Escreva uma anotação sobre esta mission..."></textarea></div>
+    <div class="field">
+      <label>Checklist</label>
+      <div id="mc-detalhe-checklist" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="mc-nova-tarefa" placeholder="Nova tarefa..." style="flex:1" onkeydown="if(event.key==='Enter')adicionarTarefaMC()">
+        <button class="btn btn-outline" onclick="adicionarTarefaMC()">+ Adicionar</button>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="excluirMissionMC()" style="color:var(--red)">Excluir mission</button>
+      <button class="btn btn-primary" onclick="salvarDetalheMC()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MISSION CONTROL: NOVA MISSION -->
+<div class="modal-bg" id="modal-mc-nova">
+  <div class="modal" style="width:480px">
+    <div class="modal-header"><div class="modal-title">Nova mission</div><button class="modal-close" onclick="fecharModal('modal-mc-nova')">✕</button></div>
+    <div class="field"><label>Título *</label><input type="text" id="mc-novo-titulo" placeholder="Ex: Reels de agosto"></div>
+    <div class="field"><label>Subtítulo</label><input type="text" id="mc-novo-subtitulo" placeholder="Opcional"></div>
+    <div class="grid2">
+      <div class="field"><label>Cliente</label><select id="mc-novo-cliente"><option value="">— nenhum —</option></select></div>
+      <div class="field"><label>Responsável</label><select id="mc-novo-responsavel"><option value="">— ninguém —</option></select></div>
+    </div>
+    <div class="field"><label>Prazo</label><input type="date" id="mc-novo-prazo"></div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="fecharModal('modal-mc-nova')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarNovaMissionMC()">Criar mission</button>
+    </div>
+  </div>
+</div>
+
+<!-- MISSION CONTROL: EQUIPE -->
+<div class="modal-bg" id="modal-mc-equipe">
+  <div class="modal" style="width:420px">
+    <div class="modal-header"><div class="modal-title">Equipe</div><button class="modal-close" onclick="fecharModal('modal-mc-equipe')">✕</button></div>
+    <p style="font-size:12px;color:var(--muted2);margin-bottom:14px">Pessoas que podem ser responsáveis por uma mission e recebem o lembrete diário via WhatsApp.</p>
+    <div id="mc-equipe-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px"></div>
+    <div class="grid2">
+      <div class="field"><label>Nome</label><input type="text" id="mc-equipe-nome" placeholder="Bruno"></div>
+      <div class="field"><label>WhatsApp (DDI)</label><input type="text" id="mc-equipe-telefone" placeholder="5511999999999"></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="adicionarMembroEquipeMC()">+ Adicionar à equipe</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -864,7 +963,7 @@ db.auth.getSession().then(({ data }) => {
 });
 
 // NAVEGAÇÃO
-const TITLES = {dashboard:'Painel',clientes:'Clientes',perfil:'',cobrancas:'Cobranças',nova:'Nova cobrança',groundcontrol:'Ground Control',faturamento:'Faturamento',launchpad:'Launchpad'};
+const TITLES = {dashboard:'Painel',clientes:'Clientes',perfil:'',cobrancas:'Cobranças',nova:'Nova cobrança',groundcontrol:'Ground Control',faturamento:'Faturamento',launchpad:'Launchpad',missioncontrol:'Mission Control'};
 window.showPage = function(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -873,14 +972,15 @@ window.showPage = function(id) {
   document.getElementById('topbar-back').style.display = id==='perfil' ? 'flex' : 'none';
   document.querySelectorAll('.nav-item').forEach(n=>{
     const t=n.textContent.trim().toLowerCase();
-    if((id==='dashboard'&&t==='painel')||(id==='clientes'&&t==='clientes')||(id==='cobrancas'&&t==='cobranças')||(id==='nova'&&t.includes('nova'))||(id==='groundcontrol'&&t.includes('ground'))||(id==='faturamento'&&t==='faturamento')||(id==='launchpad'&&t==='launchpad')) n.classList.add('active');
+    if((id==='dashboard'&&t==='painel')||(id==='clientes'&&t==='clientes')||(id==='cobrancas'&&t==='cobranças')||(id==='nova'&&t.includes('nova'))||(id==='groundcontrol'&&t.includes('ground'))||(id==='faturamento'&&t==='faturamento')||(id==='launchpad'&&t==='launchpad')||(id==='missioncontrol'&&t.includes('mission'))) n.classList.add('active');
     if(id==='groundcontrol'&&t.includes('ground')) { n.style.color='#a78bfa'; n.style.background='#a78bfa15'; }
+    if(id==='missioncontrol'&&t.includes('mission')) { n.style.color='var(--blue)'; n.style.background='var(--blue-dim)'; }
   });
   if(id==='dashboard') carregarDashboard();
   if(id==='clientes') carregarClientes();
   if(id==='cobrancas') carregarCobrancas();
   if(id==='groundcontrol') { carregarClientesGC().then(carregarAgendadosGC); carregarLogGC(); }
-  if(id==='nova') carregarClientesSelect();if(id==='faturamento') trocarAnoFaturamento(new Date().getFullYear());if(id==='launchpad') carregarLaunchpad();
+  if(id==='nova') carregarClientesSelect();if(id==='faturamento') trocarAnoFaturamento(new Date().getFullYear());if(id==='launchpad') carregarLaunchpad();if(id==='missioncontrol') carregarMissionControl();
 };
 
 window.voltarDePerfil = () => showPage('clientes');
@@ -1988,6 +2088,262 @@ window.desconectarLP = async function(id) {
   if (error) return toast('Erro: '+error.message, true);
   toast('Conta desconectada.');
   abrirIntegracoesLP();
+};
+
+
+// ===== MISSION CONTROL =====
+let clientesMC = [];
+let equipeMC = [];
+let missionsMC = [];
+let missionAtualMC = null;
+
+async function carregarClientesMC() {
+  const { data } = await db.from('clientes').select('id,nome').order('nome');
+  clientesMC = data || [];
+  const opts = '<option value="">— nenhum —</option>' + clientesMC.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  document.getElementById('mc-novo-cliente').innerHTML = opts;
+  document.getElementById('mc-filtro-cliente').innerHTML = '<option value="">Todos os clientes</option>' + clientesMC.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+}
+
+async function carregarEquipeMC() {
+  const { data } = await db.from('mission_control_team').select('*').eq('ativo', true).order('nome');
+  equipeMC = data || [];
+  const opts = '<option value="">— ninguém —</option>' + equipeMC.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+  document.getElementById('mc-novo-responsavel').innerHTML = opts;
+  document.getElementById('mc-detalhe-responsavel').innerHTML = opts;
+}
+
+window.carregarMissionControl = async function() {
+  await Promise.all([carregarClientesMC(), carregarEquipeMC()]);
+  const { data, error } = await db.from('mission_control_missions').select('*, clientes(nome), mission_control_team(nome,telefone), mission_control_tasks(*)').order('ordem');
+  if (error) { toast('Erro ao carregar Mission Control: ' + error.message, true); return; }
+  missionsMC = data || [];
+  renderMissionControlMC();
+};
+
+function diasParaPrazoMC(prazo) {
+  if (!prazo) return null;
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  const d = new Date(prazo + 'T00:00:00');
+  return Math.round((d - hoje) / 86400000);
+}
+function corPrazoMC(dias) {
+  if (dias === null) return { bg: 'var(--surface2)', fg: 'var(--muted2)' };
+  if (dias < 0) return { bg: 'var(--red-dim)', fg: 'var(--red)' };
+  if (dias <= 2) return { bg: 'var(--yellow-dim)', fg: 'var(--yellow)' };
+  return { bg: 'var(--accent-dim)', fg: 'var(--accent)' };
+}
+function fmtPrazoMC(prazo) {
+  if (!prazo) return '';
+  const [y, m, d] = prazo.split('-');
+  const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  return `${parseInt(d)} ${meses[parseInt(m) - 1]}`;
+}
+
+function cardHtmlMC(m) {
+  const tarefas = m.mission_control_tasks || [];
+  const feitas = tarefas.filter(t => t.concluida).length;
+  const total = tarefas.length;
+  const pct = total ? Math.round(feitas / total * 100) : 0;
+  const dias = diasParaPrazoMC(m.prazo);
+  const cor = corPrazoMC(dias);
+  const concluida = m.status === 'concluido';
+  const subtitulo = [m.subtitulo, m.clientes?.nome].filter(Boolean).join(' · ');
+  return `<div class="mc-card" draggable="true" data-id="${m.id}" style="cursor:grab;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px${concluida ? ';opacity:.7' : ''}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
+      <div style="font-size:13px;font-weight:600${concluida ? ';text-decoration:line-through' : ''}">${m.titulo}</div>
+      <svg onclick="abrirDetalheMC('${m.id}')" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="cursor:pointer;color:var(--muted2);flex-shrink:0"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </div>
+    <div style="font-size:11px;color:var(--muted2);margin-bottom:8px">${subtitulo || 'sem detalhes'}</div>
+    ${total ? `<div style="height:4px;background:var(--border2);border-radius:2px;margin-bottom:6px"><div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px"></div></div>` : ''}
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted2)">
+      <span>${total ? `${feitas}/${total} tarefas` : (m.mission_control_team?.nome || 'sem responsável')}</span>
+      ${m.prazo ? `<span style="background:${cor.bg};color:${cor.fg};padding:2px 6px;border-radius:6px">${fmtPrazoMC(m.prazo)}</span>` : ''}
+    </div>
+    ${total && m.mission_control_team?.nome ? `<div style="font-size:11px;color:var(--blue);margin-top:6px">${m.mission_control_team.nome}</div>` : ''}
+  </div>`;
+}
+
+window.renderMissionControlMC = function() {
+  const filtroCliente = document.getElementById('mc-filtro-cliente').value;
+  const lista = missionsMC.filter(m => !filtroCliente || m.cliente_id === filtroCliente);
+  ['backlog', 'semana', 'andamento', 'concluido'].forEach(status => {
+    const itens = lista.filter(m => m.status === status);
+    const drop = document.querySelector(`.mc-drop[data-status="${status}"]`);
+    drop.innerHTML = itens.map(cardHtmlMC).join('');
+    document.querySelector(`.mc-col[data-status="${status}"] .mc-count`).textContent = itens.length;
+  });
+  ativarDragDropMC();
+
+  const historico = lista.filter(m => m.status === 'concluido').sort((a, b) => new Date(b.concluded_at || b.updated_at) - new Date(a.concluded_at || a.updated_at));
+  document.getElementById('mc-count-historico').textContent = historico.length;
+  document.getElementById('mc-tbody-historico').innerHTML = historico.length ? historico.map(m => `<tr>
+    <td style="font-size:12px">${m.titulo}</td>
+    <td style="font-size:12px">${m.clientes?.nome || '—'}</td>
+    <td style="font-size:12px">${m.mission_control_team?.nome || '—'}</td>
+    <td style="font-size:12px">${m.concluded_at ? new Date(m.concluded_at).toLocaleDateString('pt-BR') : '—'}</td>
+  </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--muted)">Nenhuma mission concluída ainda</td></tr>';
+};
+
+window.mostrarAbaMC = function(aba) {
+  document.getElementById('mc-pane-board').style.display = aba === 'board' ? 'grid' : 'none';
+  document.getElementById('mc-pane-historico').style.display = aba === 'historico' ? 'block' : 'none';
+  document.getElementById('mc-tab-board').style.cssText = aba === 'board' ? 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--blue);font-weight:600' : 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600';
+  document.getElementById('mc-tab-historico').style.cssText = aba === 'historico' ? 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--blue);font-weight:600' : 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600';
+};
+
+function ativarDragDropMC() {
+  document.querySelectorAll('.mc-card').forEach(card => {
+    card.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', card.getAttribute('data-id')); setTimeout(() => card.style.opacity = '0.4', 0); });
+    card.addEventListener('dragend', () => { card.style.opacity = '1'; });
+  });
+  document.querySelectorAll('.mc-drop').forEach(zone => {
+    zone.ondragover = e => e.preventDefault();
+    zone.ondrop = async e => {
+      e.preventDefault();
+      const id = e.dataTransfer.getData('text/plain');
+      const novoStatus = zone.getAttribute('data-status');
+      const m = missionsMC.find(x => x.id === id);
+      if (!m || m.status === novoStatus) return;
+      m.status = novoStatus;
+      const payload = { status: novoStatus, updated_at: new Date().toISOString() };
+      if (novoStatus === 'concluido') { payload.concluded_at = new Date().toISOString(); m.concluded_at = payload.concluded_at; }
+      renderMissionControlMC();
+      const { error } = await db.from('mission_control_missions').update(payload).eq('id', id);
+      if (error) toast('Erro ao mover: ' + error.message, true);
+    };
+  });
+}
+
+window.abrirNovaMissionMC = function() {
+  document.getElementById('mc-novo-titulo').value = '';
+  document.getElementById('mc-novo-subtitulo').value = '';
+  document.getElementById('mc-novo-cliente').value = '';
+  document.getElementById('mc-novo-responsavel').value = '';
+  document.getElementById('mc-novo-prazo').value = '';
+  abrirModal('modal-mc-nova');
+};
+
+window.salvarNovaMissionMC = async function() {
+  const titulo = document.getElementById('mc-novo-titulo').value.trim();
+  if (!titulo) return toast('Dê um título pra mission.', true);
+  const payload = {
+    titulo,
+    subtitulo: document.getElementById('mc-novo-subtitulo').value.trim() || null,
+    cliente_id: document.getElementById('mc-novo-cliente').value || null,
+    responsavel_id: document.getElementById('mc-novo-responsavel').value || null,
+    prazo: document.getElementById('mc-novo-prazo').value || null,
+    status: 'backlog',
+    ordem: missionsMC.length,
+  };
+  const { error } = await db.from('mission_control_missions').insert(payload);
+  if (error) return toast('Erro: ' + error.message, true);
+  fecharModal('modal-mc-nova');
+  toast('Mission criada.');
+  carregarMissionControl();
+};
+
+window.abrirDetalheMC = function(id) {
+  const m = missionsMC.find(x => x.id === id);
+  if (!m) return;
+  missionAtualMC = m;
+  document.getElementById('mc-detalhe-titulo').textContent = m.titulo;
+  document.getElementById('mc-detalhe-subtitulo').textContent = [m.subtitulo, m.clientes?.nome].filter(Boolean).join(' · ');
+  document.getElementById('mc-detalhe-responsavel').value = m.responsavel_id || '';
+  document.getElementById('mc-detalhe-prazo').value = m.prazo || '';
+  document.getElementById('mc-detalhe-notas').value = m.notas || '';
+  renderChecklistMC();
+  abrirModal('modal-mc-detalhe');
+};
+
+function renderChecklistMC() {
+  const tarefas = (missionAtualMC.mission_control_tasks || []).slice().sort((a, b) => a.ordem - b.ordem);
+  document.getElementById('mc-detalhe-checklist').innerHTML = tarefas.length ? tarefas.map(t => `
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+      <input type="checkbox" ${t.concluida ? 'checked' : ''} onchange="toggleTarefaMC('${t.id}', this.checked)" style="width:auto">
+      <span style="${t.concluida ? 'text-decoration:line-through;color:var(--muted2)' : ''}">${t.titulo}</span>
+    </label>`).join('') : '<div style="font-size:12px;color:var(--muted2)">Nenhuma tarefa ainda.</div>';
+}
+
+window.toggleTarefaMC = async function(taskId, concluida) {
+  const { error } = await db.from('mission_control_tasks').update({ concluida }).eq('id', taskId);
+  if (error) return toast('Erro: ' + error.message, true);
+  const t = missionAtualMC.mission_control_tasks.find(x => x.id === taskId);
+  if (t) t.concluida = concluida;
+  renderChecklistMC();
+  renderMissionControlMC();
+};
+
+window.adicionarTarefaMC = async function() {
+  const input = document.getElementById('mc-nova-tarefa');
+  const titulo = input.value.trim();
+  if (!titulo) return;
+  const ordem = (missionAtualMC.mission_control_tasks || []).length;
+  const { data, error } = await db.from('mission_control_tasks').insert({ mission_id: missionAtualMC.id, titulo, ordem }).select().single();
+  if (error) return toast('Erro: ' + error.message, true);
+  if (!missionAtualMC.mission_control_tasks) missionAtualMC.mission_control_tasks = [];
+  missionAtualMC.mission_control_tasks.push(data);
+  input.value = '';
+  renderChecklistMC();
+  renderMissionControlMC();
+};
+
+window.salvarDetalheMC = async function() {
+  const payload = {
+    responsavel_id: document.getElementById('mc-detalhe-responsavel').value || null,
+    prazo: document.getElementById('mc-detalhe-prazo').value || null,
+    notas: document.getElementById('mc-detalhe-notas').value || null,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await db.from('mission_control_missions').update(payload).eq('id', missionAtualMC.id);
+  if (error) return toast('Erro: ' + error.message, true);
+  fecharModal('modal-mc-detalhe');
+  toast('Mission atualizada.');
+  carregarMissionControl();
+};
+
+window.excluirMissionMC = async function() {
+  if (!confirm('Excluir esta mission? Essa ação não pode ser desfeita.')) return;
+  const { error } = await db.from('mission_control_missions').delete().eq('id', missionAtualMC.id);
+  if (error) return toast('Erro: ' + error.message, true);
+  fecharModal('modal-mc-detalhe');
+  toast('Mission excluída.');
+  carregarMissionControl();
+};
+
+window.abrirEquipeMC = function() {
+  renderEquipeListaMC();
+  document.getElementById('mc-equipe-nome').value = '';
+  document.getElementById('mc-equipe-telefone').value = '';
+  abrirModal('modal-mc-equipe');
+};
+
+function renderEquipeListaMC() {
+  document.getElementById('mc-equipe-lista').innerHTML = equipeMC.length ? equipeMC.map(p => `
+    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px">
+      <div><div style="font-size:13px;font-weight:500">${p.nome}</div><div style="font-size:11px;color:var(--muted2)">${p.telefone}</div></div>
+      <svg onclick="removerMembroEquipeMC('${p.id}')" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="cursor:pointer;color:var(--muted2)"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </div>`).join('') : '<div style="font-size:12px;color:var(--muted2)">Ninguém na equipe ainda.</div>';
+}
+
+window.adicionarMembroEquipeMC = async function() {
+  const nome = document.getElementById('mc-equipe-nome').value.trim();
+  const telefone = document.getElementById('mc-equipe-telefone').value.trim();
+  if (!nome || !telefone) return toast('Preencha nome e telefone.', true);
+  const { error } = await db.from('mission_control_team').insert({ nome, telefone });
+  if (error) return toast('Erro: ' + error.message, true);
+  toast('Adicionado à equipe.');
+  await carregarEquipeMC();
+  renderEquipeListaMC();
+};
+
+window.removerMembroEquipeMC = async function(id) {
+  if (!confirm('Remover esta pessoa da equipe?')) return;
+  const { error } = await db.from('mission_control_team').update({ ativo: false }).eq('id', id);
+  if (error) return toast('Erro: ' + error.message, true);
+  toast('Removido da equipe.');
+  await carregarEquipeMC();
+  renderEquipeListaMC();
 };
 
 window.addEventListener('resize',()=>{if(document.getElementById('page-dashboard').classList.contains('active'))carregarDashboard();});
