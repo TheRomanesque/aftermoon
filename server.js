@@ -278,6 +278,55 @@ async function publicarLaunchpad() {
   }
 }
 
+async function enviarLembretesMissionControl() {
+  console.log('[MISSION CONTROL] Verificando pendencias do dia...');
+  const { data: dataLocal } = agoraNoFuso(TIMEZONE_PADRAO);
+  const { data: missions, error } = await supabase
+    .from('mission_control_missions')
+    .select('*, clientes(nome), mission_control_team(nome, telefone), mission_control_tasks(titulo, concluida)')
+    .eq('prazo', dataLocal)
+    .neq('status', 'concluido');
+  if (error) { console.error('[MISSION CONTROL] Erro Supabase:', error.message); return; }
+  if (!missions?.length) { console.log('[MISSION CONTROL] Nada com prazo pra hoje.'); return; }
+
+  const porResponsavel = {};
+  for (const m of missions) {
+    const resp = m.mission_control_team;
+    if (!resp || !resp.telefone) continue;
+    const chave = resp.telefone;
+    if (!porResponsavel[chave]) porResponsavel[chave] = { nome: resp.nome, telefone: resp.telefone, missions: [] };
+    porResponsavel[chave].missions.push(m);
+  }
+
+  for (const chave of Object.keys(porResponsavel)) {
+    const { nome, telefone, missions: lista } = porResponsavel[chave];
+    const primeiroNome = nome.split(' ')[0];
+    const linhas = lista.map((m, i) => {
+      const pendentes = (m.mission_control_tasks || []).filter(t => !t.concluida);
+      const cliente = m.clientes?.nome ? ` (${m.clientes.nome})` : '';
+      let linha = `${i + 1}. ${m.titulo}${cliente}`;
+      if (pendentes.length) linha += '
+   • ' + pendentes.map(t => t.titulo).join('
+   • ');
+      return linha;
+    }).join('
+
+');
+    const mensagem = `Bom dia, ${primeiroNome}! 
+
+Suas pendencias de hoje no Mission Control:
+
+${linhas}
+
+Qualquer coisa, e so chamar. `;
+    try {
+      await axios.post(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`, { number: telefone, text: mensagem }, { headers: { apikey: EVOLUTION_KEY } });
+      console.log(`[MISSION CONTROL] Lembrete enviado para ${nome} (${lista.length} mission(s))`);
+    } catch (err) {
+      console.error(`[MISSION CONTROL] Erro ao enviar lembrete para ${nome}:`, err.message);
+    }
+  }
+}
 async function enviarCobrancas() {
   const hoje = new Date().toISOString().split('T')[0];
   console.log(`[COBRANÇAS] Verificando parcelas para ${hoje}...`);
@@ -380,6 +429,11 @@ cron.schedule('*/5 * * * *', async () => {
 // Launchpad: checa a cada 2 minutos por posts agendados prontos pra publicar.
 cron.schedule('*/2 * * * *', async () => {
   await publicarLaunchpad();
+});
+
+// Mission Control: lembrete diario nos dias uteis as 08:08 (horario de Brasilia = 11:08 UTC)
+cron.schedule('8 11 * * 1-5', async () => {
+  await enviarLembretesMissionControl();
 });
 
 console.log('🚀 Aftermoon Orbit + Ground Control rodando...');
