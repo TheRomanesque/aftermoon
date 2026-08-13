@@ -305,20 +305,10 @@ async function enviarLembretesMissionControl() {
       const pendentes = (m.mission_control_tasks || []).filter(t => !t.concluida);
       const cliente = m.clientes?.nome ? ` (${m.clientes.nome})` : '';
       let linha = `${i + 1}. ${m.titulo}${cliente}`;
-      if (pendentes.length) linha += '
-   • ' + pendentes.map(t => t.titulo).join('
-   • ');
+      if (pendentes.length) linha += '\n   • ' + pendentes.map(t => t.titulo).join('\n   • ');
       return linha;
-    }).join('
-
-');
-    const mensagem = `Bom dia, ${primeiroNome}! 
-
-Suas pendencias de hoje no Mission Control:
-
-${linhas}
-
-Qualquer coisa, e so chamar. `;
+    }).join('\n\n');
+    const mensagem = `Bom dia, ${primeiroNome}! \n\nSuas pendencias de hoje no Mission Control:\n\n${linhas}\n\nQualquer coisa, e so chamar. `;
     try {
       await axios.post(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`, { number: telefone, text: mensagem }, { headers: { apikey: EVOLUTION_KEY } });
       console.log(`[MISSION CONTROL] Lembrete enviado para ${nome} (${lista.length} mission(s))`);
