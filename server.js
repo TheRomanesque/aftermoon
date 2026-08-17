@@ -31,25 +31,23 @@ function agoraNoFuso(timezone) {
   return { data: `${partes.year}-${partes.month}-${partes.day}`, hora: `${partes.hour}:${partes.minute}` };
 }
 
-// Confirma entrega real da mensagem via Evolution API (DELIVERY_ACK/READ)
-// antes de marcar como "Enviado" — regra pedida depois do incidente de RLS.
-async function confirmarEntrega(messageId, tentativas = 4, intervaloMs = 5000) {
-  for (let i = 0; i < tentativas; i++) {
-    await new Promise(r => setTimeout(r, intervaloMs));
-    try {
-      const { data } = await axios.post(
-        `${EVOLUTION_URL}/chat/findMessages/${EVOLUTION_INSTANCE}`,
-        { where: { key: { id: messageId } } },
-        { headers: { apikey: EVOLUTION_KEY } }
-      );
-      const registros = data?.messages?.records || [];
-      const registro = registros.find(r => r.key?.id === messageId) || registros[0];
-      const statusHist = (registro?.MessageUpdate || []).map(m => m.status);
-      const statusDireto = registro?.status;
-      if (statusHist.includes('DELIVERY_ACK') || statusHist.includes('READ') || statusDireto === 'DELIVERY_ACK' || statusDireto === 'READ') return true;
-    } catch (e) { /* tenta de novo na proxima volta */ }
+// Confere de verdade (nunca deduz) se uma mensagem apareceu no historico do WhatsApp
+// do cliente, buscando pelo texto enviado. Usada tanto na recuperacao de itens presos
+// quanto na checagem diaria das 11h — nunca no caminho de envio em si, pra nao marcar
+// "Falhou" so porque o ack de entrega demorou a chegar na Evolution API.
+async function mensagemFoiEntregueDeVerdade(telefone, textoBusca) {
+  try {
+    const { data } = await axios.post(
+      `${EVOLUTION_URL}/chat/findMessages/${EVOLUTION_INSTANCE}`,
+      { where: { key: { remoteJid: `${telefone}@s.whatsapp.net` } } },
+      { headers: { apikey: EVOLUTION_KEY } }
+    );
+    const registros = (data?.messages?.records || []).filter(r => r.key?.fromMe);
+    return registros.some(r => r.message?.conversation?.includes(textoBusca));
+  } catch (e) {
+    console.error('[GROUND CONTROL] Erro ao checar entrega real:', e.message);
+    return null;
   }
-  return false;
 }
 
 http.createServer(async (req, res) => {
@@ -317,6 +315,36 @@ async function enviarLembretesMissionControl() {
     }
   }
 }
+// Checagem diaria de entregas do Ground Control — roda as 11h00 (horario de Brasilia),
+// depois que os envios do dia ja deveriam ter saido (padrao e 08:08), pra CONFERIR de
+// verdade contra o WhatsApp — nao deduzir — e corrigir qualquer status errado.
+async function verificarEntregasGC() {
+  console.log('[GROUND CONTROL] Checagem diaria de entregas (11h)...');
+  const hoje = new Date().toISOString().split('T')[0];
+  const { data: itens, error } = await supabase
+    .from('ground_control_conteudo')
+    .select('*, clientes(nome, telefone)')
+    .in('status', ['Enviado', 'Falhou'])
+    .eq('data', hoje);
+  if (error) { console.error('[GROUND CONTROL] Erro Supabase na checagem diaria:', error.message); return; }
+  if (!itens?.length) { console.log('[GROUND CONTROL] Nada pra checar hoje.'); return; }
+
+  for (const item of itens) {
+    const cliente = item.clientes;
+    if (!cliente) continue;
+    const achou = await mensagemFoiEntregueDeVerdade(cliente.telefone, item.tema);
+    if (achou === null) continue;
+    const statusReal = achou ? 'Enviado' : 'Falhou';
+    if (statusReal !== item.status) {
+      await supabase.from('ground_control_conteudo').update({ status: statusReal }).eq('id', item.id);
+      if (statusReal === 'Enviado') {
+        await supabase.from('ground_control_log').insert({ cliente_nome: cliente.nome, tipo: item.tipo, tema: item.tema, telefone: cliente.telefone });
+      }
+      console.log(`[GROUND CONTROL] Checagem corrigiu ${cliente.nome} — ${item.tema}: ${item.status} -> ${statusReal}`);
+    }
+  }
+}
+
 async function enviarCobrancas() {
   const hoje = new Date().toISOString().split('T')[0];
   console.log(`[COBRANÇAS] Verificando parcelas para ${hoje}...`);
@@ -380,24 +408,19 @@ async function enviarGroundControl() { await recuperarEnviosOrfaos();
     const mensagem = `Bom dia, ${primeiroNome}! \n\n🎥 Hoje é dia de gravar: *"${item.tema}"*${item.territorio ? ` — Território: ${item.territorio}` : ''}.\n\n${item.instrucao || ''}\n\n📲 Postar onde? *${item.tipo}*\n\nQualquer dúvida, me chama! 🚀`;
 
     try {
-      const resp = await axios.post(
+      await axios.post(
         `${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`,
         { number: cliente.telefone, text: mensagem },
         { headers: { apikey: EVOLUTION_KEY } }
       );
-      const messageId = resp.data?.key?.id;
-      const entregue = messageId ? await confirmarEntrega(messageId) : false;
-
+      // A API aceitou o envio — marca Enviado na hora. A confirmacao de entrega de
+      // verdade (nao deduzida) roda na checagem diaria das 11h (verificarEntregasGC),
+      // que corrige qualquer status errado com base no que realmente chegou no WhatsApp.
       await supabase.from('ground_control_conteudo')
-        .update({ status: entregue ? 'Enviado' : 'Falhou', enviado_em: new Date().toISOString() })
+        .update({ status: 'Enviado', enviado_em: new Date().toISOString() })
         .eq('id', item.id);
-
-      if (entregue) {
-        await supabase.from('ground_control_log').insert({ cliente_nome: cliente.nome, tipo: item.tipo, tema: item.tema, telefone: cliente.telefone });
-        console.log(`[GROUND CONTROL] ✅ Enviado e confirmado para ${cliente.nome} — ${item.tipo}: ${item.tema}`);
-      } else {
-        console.log(`[GROUND CONTROL] ⚠️ Enviado mas sem confirmação de entrega para ${cliente.nome} — marcado como Falhou, será revisado manualmente.`);
-      }
+      await supabase.from('ground_control_log').insert({ cliente_nome: cliente.nome, tipo: item.tipo, tema: item.tema, telefone: cliente.telefone });
+      console.log(`[GROUND CONTROL] ✅ Enviado para ${cliente.nome} — ${item.tipo}: ${item.tema}`);
     } catch (err) {
       await supabase.from('ground_control_conteudo').update({ status: 'Falhou' }).eq('id', item.id);
       console.error(`[GROUND CONTROL] ❌ Erro para ${cliente.nome}:`, err.message);
@@ -414,6 +437,11 @@ cron.schedule('8 11 * * *', async () => {
 // configurado individualmente por cliente (fusos diferentes)
 cron.schedule('*/5 * * * *', async () => {
   await enviarGroundControl();
+});
+
+// Ground Control: checagem diaria de entregas as 11h00 (horario de Brasilia = 14:00 UTC)
+cron.schedule('0 14 * * *', async () => {
+  await verificarEntregasGC();
 });
 
 // Launchpad: checa a cada 2 minutos por posts agendados prontos pra publicar.
@@ -443,24 +471,15 @@ for (const item of presos) {
     continue;
   }
   try {
-    const { data } = await axios.post(
-      EVOLUTION_URL + '/chat/findMessages/' + EVOLUTION_INSTANCE,
-      { where: { key: { remoteJid: cliente.telefone + '@s.whatsapp.net' } } },
-      { headers: { apikey: EVOLUTION_KEY } }
-      );
-    const registros = (data && data.messages && data.messages.records ? data.messages.records : []).filter(function(r) { return r.key && r.key.fromMe; });
-    const match = registros.find(function(r) { return r.message && r.message.conversation && r.message.conversation.includes(item.tema); });
-    const statusHist = (match && match.MessageUpdate ? match.MessageUpdate.map(function(m) { return m.status; }) : []);
-    const entregue = statusHist.includes('DELIVERY_ACK') || statusHist.includes('READ');
-
-                        await supabase.from('ground_control_conteudo').update({ status: entregue ? 'Enviado' : 'Falhou', enviado_em: new Date().toISOString() }).eq('id', item.id);
-
-  if (entregue) {
-    await supabase.from('ground_control_log').insert({ cliente_nome: cliente.nome, tipo: item.tipo, tema: item.tema, telefone: cliente.telefone });
-    console.log('[GROUND CONTROL] Recuperado (entrega confirmada): ' + cliente.nome + ' - ' + item.tema);
-  } else {
-    console.log('[GROUND CONTROL] Recuperado como Falhou (sem confirmacao de entrega): ' + cliente.nome + ' - ' + item.tema);
-  }
+    const achou = await mensagemFoiEntregueDeVerdade(cliente.telefone, item.tema);
+    if (achou === null) { console.log('[GROUND CONTROL] Nao deu pra checar item preso ' + item.id + ' agora, tenta de novo no proximo ciclo.'); continue; }
+    await supabase.from('ground_control_conteudo').update({ status: achou ? 'Enviado' : 'Falhou', enviado_em: new Date().toISOString() }).eq('id', item.id);
+    if (achou) {
+      await supabase.from('ground_control_log').insert({ cliente_nome: cliente.nome, tipo: item.tipo, tema: item.tema, telefone: cliente.telefone });
+      console.log('[GROUND CONTROL] Recuperado (mensagem encontrada no WhatsApp): ' + cliente.nome + ' - ' + item.tema);
+    } else {
+      console.log('[GROUND CONTROL] Recuperado como Falhou (mensagem nao encontrada): ' + cliente.nome + ' - ' + item.tema);
+    }
   } catch (err) {
     console.error('[GROUND CONTROL] Erro ao recuperar item preso ' + item.id + ':', err.message);
   }
