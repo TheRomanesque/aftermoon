@@ -244,6 +244,10 @@ textarea{resize:vertical;min-height:80px}
 .cal-footer{display:flex;justify-content:space-between;gap:6px;margin-top:10px}
 .cal-footer button{flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:6px;border-radius:6px;cursor:pointer;font-size:11px}
 .cal-footer button:hover{color:var(--accent);border-color:var(--accent)}
+.mc-col{display:flex;flex-direction:column}
+.mc-drop{flex:1 1 auto}
+#mc-pane-board.mc-dragging .mc-drop{border:1px dashed var(--border2);border-radius:8px}
+.mc-drop.mc-drop-active{border:1px dashed var(--blue);background:var(--blue-dim)}
 </style>
 </head>
 <body>
@@ -461,10 +465,17 @@ textarea{resize:vertical;min-height:80px}
 
         <!-- PANE: AGENDADOS -->
         <div id="gc-pane-agendados">
+          <div id="gc-bulkbar" style="display:none;align-items:center;justify-content:space-between;background:#a78bfa15;border:1px solid #a78bfa;border-radius:8px;padding:9px 12px;margin-bottom:10px">
+            <span style="font-size:12px;color:#a78bfa"><span id="gc-sel-count">0</span> selecionado(s)</span>
+            <button class="btn btn-danger" style="padding:6px 10px;display:flex;align-items:center;gap:6px" onclick="excluirSelecionadosGC()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              Excluir selecionados
+            </button>
+          </div>
           <div class="table-card">
             <table>
-              <thead><tr><th>Data</th><th>Cliente</th><th>Conteúdo</th><th>Tipo</th><th>Status</th><th></th></tr></thead>
-              <tbody id="tbody-gc-agendados"><tr><td colspan="6" class="empty">Carregando...</td></tr></tbody>
+              <thead><tr><th style="width:30px"><input type="checkbox" id="gc-select-all" onchange="toggleSelecionarTodosGC(this)"></th><th>Data</th><th>Cliente</th><th>Conteúdo</th><th>Tipo</th><th>Status</th><th></th></tr></thead>
+              <tbody id="tbody-gc-agendados"><tr><td colspan="7" class="empty">Carregando...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1534,12 +1545,16 @@ async function carregarAgendadosGC() {
   const {data} = await db.from('ground_control_conteudo').select('*, clientes(nome,telefone)').neq('status','Enviado').neq('status','Cancelado').order('data');
   const tbody = document.getElementById('tbody-gc-agendados');
   document.getElementById('gc-count-agendados').textContent = data?.length || 0;
-  if(!data?.length){ tbody.innerHTML='<tr><td colspan="6" class="empty">Nada agendado por enquanto.</td></tr>'; return; }
+  document.getElementById('gc-select-all').checked = false;
+  document.getElementById('gc-bulkbar').style.display = 'none';
+  document.getElementById('gc-sel-count').textContent = '0';
+  if(!data?.length){ tbody.innerHTML='<tr><td colspan="7" class="empty">Nada agendado por enquanto.</td></tr>'; return; }
   tbody.innerHTML = data.map(item=>{
     const nome = item.clientes?.nome || '— cliente removido —';
     const cor = avatarColor(nome);
     const badge = STATUS_BADGE_GC[item.status] || 'badge-pending';
     return `<tr>
+      <td><input type="checkbox" class="gc-row-chk" value="${item.id}" onchange="atualizarBarraGC()"></td>
       <td style="font-size:12px">${fmtData(item.data)}</td>
       <td><div class="flex"><div class="avatar" style="background:${cor}20;color:${cor};width:28px;height:28px;border-radius:8px;font-size:10px">${iniciais(nome)}</div><div class="name">${nome}</div></div></td>
       <td><div class="name" style="font-size:12.5px">${item.tema}</div><div class="sub">${item.territorio?('Território: '+item.territorio):''}</div></td>
@@ -1548,11 +1563,39 @@ async function carregarAgendadosGC() {
       <td><div class="btn-group">
         <button class="btn btn-ghost" style="padding:5px 8px" title="Editar" onclick='abrirEditarConteudoGC(${JSON.stringify(item).replace(/'/g,"&#39;")})'>✎</button>
         <button class="btn btn-ghost" style="padding:5px 8px" title="Enviar agora" onclick="enviarConteudoAgoraGC('${item.id}')">▶</button>
-        <button class="btn btn-danger" style="padding:5px 8px" title="Cancelar" onclick="cancelarConteudoGC('${item.id}','${nome.replace(/'/g,"")}')">✕</button>
+        <button class="btn btn-danger" style="padding:5px 8px" title="Excluir" onclick="cancelarConteudoGC('${item.id}','${nome.replace(/'/g,"")}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
       </div></td>
     </tr>`;
   }).join('');
 }
+
+window.toggleSelecionarTodosGC = function(master) {
+  document.querySelectorAll('.gc-row-chk').forEach(chk => chk.checked = master.checked);
+  atualizarBarraGC();
+};
+
+window.atualizarBarraGC = function() {
+  const marcados = document.querySelectorAll('.gc-row-chk:checked');
+  document.getElementById('gc-bulkbar').style.display = marcados.length ? 'flex' : 'none';
+  document.getElementById('gc-sel-count').textContent = marcados.length;
+};
+
+window.excluirSelecionadosGC = function() {
+  const marcados = [...document.querySelectorAll('.gc-row-chk:checked')];
+  if (!marcados.length) return;
+  document.getElementById('confirm-nome').textContent = marcados.length + ' conteúdo(s) selecionado(s)';
+  document.getElementById('confirm-texto').textContent = 'Isso cancela o envio de todos os itens selecionados. Pode reagendar depois se precisar.';
+  document.getElementById('btn-confirmar-excluir').onclick = async () => {
+    const ids = marcados.map(chk => chk.value);
+    await db.from('ground_control_conteudo').update({status:'Cancelado'}).in('id', ids);
+    fecharModal('modal-confirmar');
+    toast(ids.length + ' conteúdo(s) cancelado(s)');
+    carregarAgendadosGC();
+  };
+  abrirModal('modal-confirmar');
+};
 
 // GROUND CONTROL LOG (histórico)
 async function carregarLogGC() {
@@ -1980,9 +2023,12 @@ window.salvarPostLP = async function() {
 
 window.aprovarPostLP = async function(id) {
   const {data:{session}} = await db.auth.getSession();
-  const {error} = await db.from('launchpad_posts').update({status:'approved', approved_by: session?.user?.id || null, approved_at: new Date().toISOString()}).eq('id', id);
+  const post = postsLP.find(x=>x.id===id);
+  const payload = {status:'approved', approved_by: session?.user?.id || null, approved_at: new Date().toISOString()};
+  if (post?.scheduled_at) payload.status = 'scheduled';
+  const {error} = await db.from('launchpad_posts').update(payload).eq('id', id);
   if (error) return toast('Erro: '+error.message, true);
-  toast('Post aprovado.');
+  toast(payload.status === 'scheduled' ? 'Post aprovado e agendado para ' + new Date(post.scheduled_at).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) + '.' : 'Post aprovado.');
   await carregarLaunchpad();
 };
 
@@ -2311,14 +2357,26 @@ window.mostrarAbaMC = function(aba) {
 };
 
 function ativarDragDropMC() {
+  const board = document.getElementById('mc-pane-board');
   document.querySelectorAll('.mc-card').forEach(card => {
-    card.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', card.getAttribute('data-id')); setTimeout(() => card.style.opacity = '0.4', 0); });
-    card.addEventListener('dragend', () => { card.style.opacity = '1'; });
+    card.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', card.getAttribute('data-id'));
+      setTimeout(() => card.style.opacity = '0.4', 0);
+      board.classList.add('mc-dragging');
+    });
+    card.addEventListener('dragend', () => {
+      card.style.opacity = '1';
+      board.classList.remove('mc-dragging');
+      document.querySelectorAll('.mc-drop').forEach(z => z.classList.remove('mc-drop-active'));
+    });
   });
   document.querySelectorAll('.mc-drop').forEach(zone => {
     zone.ondragover = e => e.preventDefault();
+    zone.ondragenter = e => { e.preventDefault(); zone.classList.add('mc-drop-active'); };
+    zone.ondragleave = () => zone.classList.remove('mc-drop-active');
     zone.ondrop = async e => {
       e.preventDefault();
+      zone.classList.remove('mc-drop-active');
       const id = e.dataTransfer.getData('text/plain');
       const novoStatus = zone.getAttribute('data-status');
       const m = missionsMC.find(x => x.id === id);
