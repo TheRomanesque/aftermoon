@@ -319,15 +319,19 @@ async function enviarLembretesMissionControl() {
 // depois que os envios do dia ja deveriam ter saido (padrao e 08:08), pra CONFERIR de
 // verdade contra o WhatsApp — nao deduzir — e corrigir qualquer status errado.
 async function verificarEntregasGC() {
-  console.log('[GROUND CONTROL] Checagem diaria de entregas (11h)...');
-  const hoje = new Date().toISOString().split('T')[0];
+  console.log('[GROUND CONTROL] Checagem de entregas (ultimos 14 dias)...');
+  const hoje = new Date();
+  const desde = new Date(hoje.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  // Checa os ultimos 14 dias (nao so hoje) para que um "Falhou" de dias
+  // anteriores tambem seja corrigido, e nao fique preso pra sempre so
+  // porque o cron so roda uma vez por dia olhando pra data de hoje.
   const { data: itens, error } = await supabase
     .from('ground_control_conteudo')
     .select('*, clientes(nome, telefone)')
     .in('status', ['Enviado', 'Falhou'])
-    .eq('data', hoje);
-  if (error) { console.error('[GROUND CONTROL] Erro Supabase na checagem diaria:', error.message); return; }
-  if (!itens?.length) { console.log('[GROUND CONTROL] Nada pra checar hoje.'); return; }
+    .gte('data', desde);
+  if (error) { console.error('[GROUND CONTROL] Erro Supabase na checagem:', error.message); return; }
+  if (!itens?.length) { console.log('[GROUND CONTROL] Nada pra checar.'); return; }
 
   for (const item of itens) {
     const cliente = item.clientes;
@@ -443,6 +447,11 @@ cron.schedule('*/5 * * * *', async () => {
 cron.schedule('0 14 * * *', async () => {
   await verificarEntregasGC();
 });
+
+// Roda a checagem uma vez tambem ao subir o servidor, pra nao depender
+// de esperar o cron das 11h caso o deploy suba depois desse horario
+// ou o servidor reinicie com itens presos em status errado.
+setTimeout(() => { verificarEntregasGC(); }, 15000);
 
 // Launchpad: checa a cada 2 minutos por posts agendados prontos pra publicar.
 cron.schedule('*/2 * * * *', async () => {
