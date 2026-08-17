@@ -474,7 +474,7 @@ textarea{resize:vertical;min-height:80px}
           </div>
           <div class="table-card">
             <table>
-              <thead><tr><th style="width:30px"><input type="checkbox" id="gc-select-all" onchange="toggleSelecionarTodosGC(this)"></th><th>Data</th><th>Cliente</th><th>Conteúdo</th><th>Tipo</th><th>Status</th><th></th></tr></thead>
+              <thead><tr><th style="width:30px"><input type="checkbox" id="gc-select-all" onchange="toggleSelecionarTodosGC(this)"></th><th data-sort-tabela="gc-agendados" data-sort-col="data" onclick="ordenarGCAgendados('data')" style="cursor:pointer;user-select:none">Data <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="gc-agendados" data-sort-col="cliente" onclick="ordenarGCAgendados('cliente')" style="cursor:pointer;user-select:none">Cliente <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="gc-agendados" data-sort-col="conteudo" onclick="ordenarGCAgendados('conteudo')" style="cursor:pointer;user-select:none">Conteúdo <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="gc-agendados" data-sort-col="tipo" onclick="ordenarGCAgendados('tipo')" style="cursor:pointer;user-select:none">Tipo <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="gc-agendados" data-sort-col="status" onclick="ordenarGCAgendados('status')" style="cursor:pointer;user-select:none">Status <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th></th></tr></thead>
               <tbody id="tbody-gc-agendados"><tr><td colspan="7" class="empty">Carregando...</td></tr></tbody>
             </table>
           </div>
@@ -488,7 +488,7 @@ textarea{resize:vertical;min-height:80px}
               <button class="btn btn-ghost" style="font-size:12px" onclick="carregarLogGC()">↻ Atualizar</button>
             </div>
             <table>
-              <thead><tr><th>Cliente</th><th>Tipo</th><th>Tema</th><th>Enviado em</th></tr></thead>
+              <thead><tr><th data-sort-tabela="gc-log" data-sort-col="cliente" onclick="ordenarLogGC('cliente')" style="cursor:pointer;user-select:none">Cliente <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="gc-log" data-sort-col="tipo" onclick="ordenarLogGC('tipo')" style="cursor:pointer;user-select:none">Tipo <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="gc-log" data-sort-col="tema" onclick="ordenarLogGC('tema')" style="cursor:pointer;user-select:none">Tema <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="gc-log" data-sort-col="enviado" onclick="ordenarLogGC('enviado')" style="cursor:pointer;user-select:none">Enviado em <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th></tr></thead>
               <tbody id="tbody-gc-log"><tr><td colspan="4" class="empty">Carregando...</td></tr></tbody>
             </table>
           </div>
@@ -528,7 +528,7 @@ textarea{resize:vertical;min-height:80px}
         <div id="lp-pane-ativos">
           <div class="table-card" style="overflow-x:auto">
             <table>
-              <thead><tr><th>Cliente</th><th>Conteúdo</th><th>Conta</th><th>Status</th><th>Agendado para</th><th>Ações</th></tr></thead>
+              <thead><tr><th data-sort-tabela="lp-ativos" data-sort-col="cliente" onclick="ordenarLP('cliente')" style="cursor:pointer;user-select:none">Cliente <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="lp-ativos" data-sort-col="conteudo" onclick="ordenarLP('conteudo')" style="cursor:pointer;user-select:none">Conteúdo <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="lp-ativos" data-sort-col="conta" onclick="ordenarLP('conta')" style="cursor:pointer;user-select:none">Conta <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="lp-ativos" data-sort-col="status" onclick="ordenarLP('status')" style="cursor:pointer;user-select:none">Status <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="lp-ativos" data-sort-col="agendado" onclick="ordenarLP('agendado')" style="cursor:pointer;user-select:none">Agendado para <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th>Ações</th></tr></thead>
               <tbody id="lp-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted)">Carregando...</td></tr></tbody>
             </table>
           </div>
@@ -538,7 +538,7 @@ textarea{resize:vertical;min-height:80px}
         <div id="lp-pane-historico" style="display:none">
           <div class="table-card" style="overflow-x:auto">
             <table>
-              <thead><tr><th>Cliente</th><th>Conteúdo</th><th>Conta</th><th>Publicado em</th><th></th></tr></thead>
+              <thead><tr><th data-sort-tabela="lp-historico" data-sort-col="cliente" onclick="ordenarHistoricoLP('cliente')" style="cursor:pointer;user-select:none">Cliente <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="lp-historico" data-sort-col="conteudo" onclick="ordenarHistoricoLP('conteudo')" style="cursor:pointer;user-select:none">Conteúdo <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="lp-historico" data-sort-col="conta" onclick="ordenarHistoricoLP('conta')" style="cursor:pointer;user-select:none">Conta <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th data-sort-tabela="lp-historico" data-sort-col="publicado" onclick="ordenarHistoricoLP('publicado')" style="cursor:pointer;user-select:none">Publicado em <span class="sort-arrow" style="opacity:0;font-size:9px">▲</span></th><th></th></tr></thead>
               <tbody id="lp-tbody-historico"><tr><td colspan="5" style="text-align:center;color:var(--muted)">Carregando...</td></tr></tbody>
             </table>
           </div>
@@ -1541,15 +1541,96 @@ window.mostrarAbaGC = function(aba) {
 
 const STATUS_BADGE_GC = { Agendado:'badge-pending', Enviando:'badge-today', Enviado:'badge-sent', Falhou:'badge-overdue', Cancelado:'badge-overdue' };
 
+let dadosAgendadosGC = [];
+let dadosLogGC = [];
+let dadosHistoricoLP = [];
+window.__sortState = window.__sortState || {};
+function ordenarPorColuna(dados, extrairValor, dir) {
+  return [...dados].sort((a,b)=>{
+    let va = extrairValor(a), vb = extrairValor(b);
+    if (va===null||va===undefined) va='';
+    if (vb===null||vb===undefined) vb='';
+    if (typeof va==='string') va = va.toLowerCase();
+    if (typeof vb==='string') vb = vb.toLowerCase();
+    if (va<vb) return dir==='asc' ? -1 : 1;
+    if (va>vb) return dir==='asc' ? 1 : -1;
+    return 0;
+  });
+}
+function atualizarSetasOrdenacao(tabelaKey, coluna, dir) {
+  document.querySelectorAll(`[data-sort-tabela="${tabelaKey}"]`).forEach(th=>{
+    const seta = th.querySelector('.sort-arrow');
+    if (!seta) return;
+    if (coluna && th.getAttribute('data-sort-col')===coluna) {
+      seta.textContent = dir==='asc' ? '▲' : '▼';
+      seta.style.opacity = '1';
+    } else {
+      seta.textContent = '▲';
+      seta.style.opacity = '0';
+    }
+  });
+}
+function alternarOrdenacao(tabelaKey, coluna, dados, extratores, renderFn) {
+  const st = window.__sortState[tabelaKey];
+  const dir = (st && st.coluna===coluna && st.dir==='asc') ? 'desc' : 'asc';
+  window.__sortState[tabelaKey] = {coluna, dir};
+  const ordenado = ordenarPorColuna(dados, extratores[coluna], dir);
+  renderFn(ordenado);
+  atualizarSetasOrdenacao(tabelaKey, coluna, dir);
+}
+window.ordenarGCAgendados = function(coluna) {
+  const extratores = {
+    data: item => item.data || '',
+    cliente: item => item.clientes?.nome || '',
+    conteudo: item => item.tema || '',
+    tipo: item => item.tipo || '',
+    status: item => item.status || '',
+  };
+  alternarOrdenacao('gc-agendados', coluna, dadosAgendadosGC, extratores, renderTabelaAgendadosGC);
+};
+window.ordenarLogGC = function(coluna) {
+  const extratores = {
+    cliente: item => item.cliente_nome || '',
+    tipo: item => item.tipo || '',
+    tema: item => item.tema || '',
+    enviado: item => item.enviado_em || '',
+  };
+  alternarOrdenacao('gc-log', coluna, dadosLogGC, extratores, renderTabelaLogGC);
+};
+window.ordenarLP = function(coluna) {
+  const extratores = {
+    cliente: item => item.clientes?.nome || '',
+    conteudo: item => item.content || '',
+    conta: item => item.launchpad_social_connections?.account_name || '',
+    status: item => item.status || '',
+    agendado: item => item.scheduled_at || '',
+  };
+  alternarOrdenacao('lp-ativos', coluna, postsLP, extratores, renderTabelaLP);
+};
+window.ordenarHistoricoLP = function(coluna) {
+  const extratores = {
+    cliente: item => item.clientes?.nome || '',
+    conteudo: item => item.content || '',
+    conta: item => item.launchpad_social_connections?.account_name || '',
+    publicado: item => item.published_at || '',
+  };
+  alternarOrdenacao('lp-historico', coluna, dadosHistoricoLP, extratores, renderTabelaHistoricoLP);
+};
 async function carregarAgendadosGC() {
   const {data} = await db.from('ground_control_conteudo').select('*, clientes(nome,telefone)').neq('status','Enviado').neq('status','Cancelado').order('data');
-  const tbody = document.getElementById('tbody-gc-agendados');
-  document.getElementById('gc-count-agendados').textContent = data?.length || 0;
+  dadosAgendadosGC = data || [];
+  document.getElementById('gc-count-agendados').textContent = dadosAgendadosGC.length;
   document.getElementById('gc-select-all').checked = false;
   document.getElementById('gc-bulkbar').style.display = 'none';
   document.getElementById('gc-sel-count').textContent = '0';
-  if(!data?.length){ tbody.innerHTML='<tr><td colspan="7" class="empty">Nada agendado por enquanto.</td></tr>'; return; }
-  tbody.innerHTML = data.map(item=>{
+  window.__sortState['gc-agendados'] = null;
+  atualizarSetasOrdenacao('gc-agendados', null, null);
+  renderTabelaAgendadosGC(dadosAgendadosGC);
+}
+function renderTabelaAgendadosGC(lista) {
+  const tbody = document.getElementById('tbody-gc-agendados');
+  if(!lista?.length){ tbody.innerHTML='<tr><td colspan="7" class="empty">Nada agendado por enquanto.</td></tr>'; return; }
+  tbody.innerHTML = lista.map(item=>{
     const nome = item.clientes?.nome || '— cliente removido —';
     const cor = avatarColor(nome);
     const badge = STATUS_BADGE_GC[item.status] || 'badge-pending';
@@ -1600,13 +1681,19 @@ window.excluirSelecionadosGC = function() {
 // GROUND CONTROL LOG (histórico)
 async function carregarLogGC() {
   const {data} = await db.from('ground_control_log').select('*').order('enviado_em',{ascending:false}).limit(50);
-  document.getElementById('gc-count-historico').textContent = data?.length || 0;
+  dadosLogGC = data || [];
+  document.getElementById('gc-count-historico').textContent = dadosLogGC.length;
+  window.__sortState['gc-log'] = null;
+  atualizarSetasOrdenacao('gc-log', null, null);
+  renderTabelaLogGC(dadosLogGC);
+}
+function renderTabelaLogGC(lista) {
   const tbody = document.getElementById('tbody-gc-log');
-  if(!data?.length){tbody.innerHTML='<tr><td colspan="4" class="empty">Nenhuma mensagem enviada ainda.</td></tr>';document.getElementById('gc-hoje-badge').textContent='0 hoje';return;}
+  if(!lista?.length){tbody.innerHTML='<tr><td colspan="4" class="empty">Nenhuma mensagem enviada ainda.</td></tr>';document.getElementById('gc-hoje-badge').textContent='0 hoje';return;}
   const hj=hoje();
-  const hoje_count=data.filter(d=>d.enviado_em?.slice(0,10)===hj).length;
+  const hoje_count=lista.filter(d=>d.enviado_em?.slice(0,10)===hj).length;
   document.getElementById('gc-hoje-badge').textContent=hoje_count+' enviado'+(hoje_count!==1?'s':'')+' hoje';
-  tbody.innerHTML=data.map(d=>{
+  tbody.innerHTML=lista.map(d=>{
     const cor=avatarColor(d.cliente_nome||'A');
     const dt=new Date(d.enviado_em);
     const isHj=d.enviado_em?.slice(0,10)===hj;
@@ -1892,8 +1979,14 @@ window.carregarLaunchpad = async function carregarLaunchpad() {
   if (error) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--red)">Erro ao carregar: '+error.message+'</td></tr>'; return; }
   postsLP = data || [];
   document.getElementById('lp-count-ativos').textContent = postsLP.length;
-  if (!postsLP.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Nenhum post encontrado.</td></tr>'; return; }
-  tbody.innerHTML = postsLP.map(renderLinhaLP).join('');
+  window.__sortState['lp-ativos'] = null;
+  atualizarSetasOrdenacao('lp-ativos', null, null);
+  renderTabelaLP(postsLP);
+}
+function renderTabelaLP(lista) {
+  const tbody = document.getElementById('lp-tbody');
+  if (!lista?.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Nenhum post encontrado.</td></tr>'; return; }
+  tbody.innerHTML = lista.map(renderLinhaLP).join('');
 }
 
 window.mostrarAbaLP = function(aba) {
@@ -1907,10 +2000,17 @@ window.mostrarAbaLP = function(aba) {
 window.carregarHistoricoLP = async function carregarHistoricoLP() {
   const tbody = document.getElementById('lp-tbody-historico');
   const {data, error} = await db.from('launchpad_posts').select('*, clientes(nome), launchpad_social_connections(account_name, is_mock)').eq('status', 'published').is('deleted_at', null).order('published_at', {ascending:false}).limit(50);
-  document.getElementById('lp-count-historico').textContent = data?.length || 0;
   if (error) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red)">Erro ao carregar: '+error.message+'</td></tr>'; return; }
-  if (!data?.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Nenhuma publicação feita ainda.</td></tr>'; return; }
-  tbody.innerHTML = data.map(p => {
+  dadosHistoricoLP = data || [];
+  document.getElementById('lp-count-historico').textContent = dadosHistoricoLP.length;
+  window.__sortState['lp-historico'] = null;
+  atualizarSetasOrdenacao('lp-historico', null, null);
+  renderTabelaHistoricoLP(dadosHistoricoLP);
+};
+function renderTabelaHistoricoLP(lista) {
+  const tbody = document.getElementById('lp-tbody-historico');
+  if (!lista?.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Nenhuma publicação feita ainda.</td></tr>'; return; }
+  tbody.innerHTML = lista.map(p => {
     const conta = p.launchpad_social_connections;
     const conteudoResumo = (p.content||'').slice(0,70) + ((p.content||'').length > 70 ? '…' : '');
     const publicadoEm = p.published_at ? new Date(p.published_at).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '—';
@@ -2291,17 +2391,27 @@ function diasParaPrazoMC(prazo) {
   const d = new Date(prazo + 'T00:00:00');
   return Math.round((d - hoje) / 86400000);
 }
-function corPrazoMC(dias) {
-  if (dias === null) return { bg: 'var(--surface2)', fg: 'var(--muted2)' };
-  if (dias < 0) return { bg: 'var(--red-dim)', fg: 'var(--red)' };
-  if (dias <= 2) return { bg: 'var(--yellow-dim)', fg: 'var(--yellow)' };
-  return { bg: 'var(--accent-dim)', fg: 'var(--accent)' };
-}
 function fmtPrazoMC(prazo) {
   if (!prazo) return '';
   const [y, m, d] = prazo.split('-');
   const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
   return `${parseInt(d)} ${meses[parseInt(m) - 1]}`;
+}
+const ICONE_ALERTA_MC = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+const ICONE_RELOGIO_MC = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M5 3 2 6"/><path d="M22 6l-3-3"/></svg>';
+// Info de prioridade visual do card com base no prazo: define a cor da faixa
+// lateral, a etiqueta (com icone quando urgente) e o rank pra ordenacao
+// (0 = mais urgente). Prazo distante fica visualmente quieto de proposito.
+function prioridadeInfoMC(dias, prazo) {
+  if (dias === null) return { borda: 'transparent', badge: '', rank: 4 };
+  if (dias < 0) {
+    const d = Math.abs(dias);
+    return { borda: 'var(--red)', rank: 0, badge: `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--red-dim);color:var(--red);padding:2px 6px;border-radius:6px">${ICONE_ALERTA_MC}atrasado ${d}d</span>` };
+  }
+  if (dias === 0) return { borda: 'var(--orange)', rank: 1, badge: `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--orange-dim);color:var(--orange);padding:2px 6px;border-radius:6px">${ICONE_RELOGIO_MC}hoje</span>` };
+  if (dias === 1) return { borda: 'var(--orange)', rank: 1, badge: `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--orange-dim);color:var(--orange);padding:2px 6px;border-radius:6px">${ICONE_RELOGIO_MC}amanhã</span>` };
+  if (dias <= 6) return { borda: 'var(--yellow)', rank: 2, badge: `<span style="background:var(--yellow-dim);color:var(--yellow);padding:2px 6px;border-radius:6px">em ${dias}d</span>` };
+  return { borda: 'var(--border2)', rank: 3, badge: `<span style="background:var(--surface2);color:var(--muted2);padding:2px 6px;border-radius:6px">${fmtPrazoMC(prazo)}</span>` };
 }
 
 function cardHtmlMC(m) {
@@ -2310,10 +2420,10 @@ function cardHtmlMC(m) {
   const total = tarefas.length;
   const pct = total ? Math.round(feitas / total * 100) : 0;
   const dias = diasParaPrazoMC(m.prazo);
-  const cor = corPrazoMC(dias);
   const concluida = m.status === 'concluido';
+  const prioridade = concluida ? { borda: 'var(--border2)', badge: '' } : prioridadeInfoMC(dias, m.prazo);
   const subtitulo = [m.subtitulo, m.clientes?.nome].filter(Boolean).join(' · ');
-  return `<div class="mc-card" draggable="true" data-id="${m.id}" style="cursor:grab;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px${concluida ? ';opacity:.7' : ''}">
+  return `<div class="mc-card" draggable="true" data-id="${m.id}" style="cursor:grab;background:var(--surface2);border:1px solid var(--border2);border-left:3px solid ${prioridade.borda};border-radius:var(--radius-sm);padding:10px${concluida ? ';opacity:.7' : ''}">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
       <div style="font-size:13px;font-weight:600${concluida ? ';text-decoration:line-through' : ''}">${m.titulo}</div>
       <svg onclick="abrirDetalheMC('${m.id}')" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="cursor:pointer;color:var(--muted2);flex-shrink:0"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -2322,7 +2432,7 @@ function cardHtmlMC(m) {
     ${total ? `<div style="height:4px;background:var(--border2);border-radius:2px;margin-bottom:6px"><div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px"></div></div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted2)">
       <span>${total ? `${feitas}/${total} tarefas` : (m.mission_control_team?.nome || 'sem responsável')}</span>
-      ${m.prazo ? `<span style="background:${cor.bg};color:${cor.fg};padding:2px 6px;border-radius:6px">${fmtPrazoMC(m.prazo)}</span>` : ''}
+      ${m.prazo && !concluida ? prioridade.badge : ''}
     </div>
     ${total && m.mission_control_team?.nome ? `<div style="font-size:11px;color:var(--blue);margin-top:6px">${m.mission_control_team.nome}</div>` : ''}
   </div>`;
@@ -2333,6 +2443,16 @@ window.renderMissionControlMC = function() {
   const lista = missionsMC.filter(m => !filtroCliente || m.cliente_id === filtroCliente);
   ['backlog', 'semana', 'andamento', 'concluido'].forEach(status => {
     const itens = lista.filter(m => m.status === status);
+    // Ordena por urgencia (atrasado > hoje/amanha > essa semana > mais tarde > sem prazo),
+    // e dentro do mesmo nivel, o prazo mais proximo primeiro.
+    if (status !== 'concluido') {
+      itens.sort((a, b) => {
+        const da = diasParaPrazoMC(a.prazo), db_ = diasParaPrazoMC(b.prazo);
+        const ra = prioridadeInfoMC(da, a.prazo).rank, rb = prioridadeInfoMC(db_, b.prazo).rank;
+        if (ra !== rb) return ra - rb;
+        return (da ?? Infinity) - (db_ ?? Infinity);
+      });
+    }
     const drop = document.querySelector(`.mc-drop[data-status="${status}"]`);
     drop.innerHTML = itens.map(cardHtmlMC).join('');
     document.querySelector(`.mc-col[data-status="${status}"] .mc-count`).textContent = itens.length;
