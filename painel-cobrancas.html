@@ -555,22 +555,30 @@ textarea{resize:vertical;min-height:80px}
           <div class="mc-tab active" id="mc-tab-board" onclick="mostrarAbaMC('board')" style="padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--blue);font-weight:600">Board</div>
           <div class="mc-tab" id="mc-tab-historico" onclick="mostrarAbaMC('historico')" style="padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600">Histórico <span id="mc-count-historico" style="background:var(--surface2);color:var(--muted2);font-size:10.5px;padding:1px 7px;border-radius:10px">0</span></div>
         </div>
-        <div id="mc-pane-board" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
-          <div class="mc-col" data-status="backlog">
+        <div id="mc-pane-board" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:6px">
+          <div class="mc-col" data-status="backlog" style="flex:0 0 260px;min-width:260px">
             <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);margin-bottom:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--muted2)"></span>Backlog<span class="mc-count" style="margin-left:auto">0</span></div>
             <div class="mc-drop" data-status="backlog" style="min-height:60px;display:flex;flex-direction:column;gap:8px"></div>
           </div>
-          <div class="mc-col" data-status="semana">
+          <div class="mc-col" data-status="semana" style="flex:0 0 260px;min-width:260px">
             <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);margin-bottom:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--blue)"></span>Esta semana<span class="mc-count" style="margin-left:auto">0</span></div>
             <div class="mc-drop" data-status="semana" style="min-height:60px;display:flex;flex-direction:column;gap:8px"></div>
           </div>
-          <div class="mc-col" data-status="andamento">
+          <div class="mc-col" data-status="andamento" style="flex:0 0 260px;min-width:260px">
             <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);margin-bottom:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--orange)"></span>Em andamento<span class="mc-count" style="margin-left:auto">0</span></div>
             <div class="mc-drop" data-status="andamento" style="min-height:60px;display:flex;flex-direction:column;gap:8px"></div>
           </div>
-          <div class="mc-col" data-status="concluido">
+          <div class="mc-col" data-status="sandbox" style="flex:0 0 260px;min-width:260px">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);margin-bottom:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--muted)"></span>Sandbox<span class="mc-count" style="margin-left:auto">0</span></div>
+            <div class="mc-drop" data-status="sandbox" style="min-height:60px;display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+          <div class="mc-col" data-status="concluido" style="flex:0 0 260px;min-width:260px">
             <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);margin-bottom:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent)"></span>Concluído<span class="mc-count" style="margin-left:auto">0</span></div>
             <div class="mc-drop" data-status="concluido" style="min-height:60px;display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+          <div class="mc-col" data-status="bacia_das_almas" style="flex:0 0 260px;min-width:260px">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);margin-bottom:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--red)"></span>Bacia das Almas<span class="mc-count" style="margin-left:auto">0</span></div>
+            <div class="mc-drop" data-status="bacia_das_almas" style="min-height:60px;display:flex;flex-direction:column;gap:8px"></div>
           </div>
         </div>
         <div id="mc-pane-historico" style="display:none">
@@ -2421,18 +2429,18 @@ function cardHtmlMC(m) {
   const pct = total ? Math.round(feitas / total * 100) : 0;
   const dias = diasParaPrazoMC(m.prazo);
   const concluida = m.status === 'concluido';
-  const prioridade = concluida ? { borda: 'var(--border2)', badge: '' } : prioridadeInfoMC(dias, m.prazo);
+  const cancelada = m.status === 'bacia_das_almas';
+  const pausada = m.status === 'sandbox';
+  const inativa = concluida || cancelada || pausada;
+  const prioridade = inativa ? { borda: 'var(--border2)', badge: '' } : prioridadeInfoMC(dias, m.prazo);
   const subtitulo = [m.subtitulo, m.clientes?.nome].filter(Boolean).join(' · ');
-  return `<div class="mc-card" draggable="true" data-id="${m.id}" style="cursor:grab;background:var(--surface2);border:1px solid var(--border2);border-left:3px solid ${prioridade.borda};border-radius:var(--radius-sm);padding:10px${concluida ? ';opacity:.7' : ''}">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
-      <div style="font-size:13px;font-weight:600${concluida ? ';text-decoration:line-through' : ''}">${m.titulo}</div>
-      <svg onclick="abrirDetalheMC('${m.id}')" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="cursor:pointer;color:var(--muted2);flex-shrink:0"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-    </div>
+  return `<div class="mc-card" draggable="true" data-id="${m.id}" onclick="abrirDetalheMC('${m.id}')" style="cursor:pointer;background:var(--surface2);border:1px solid var(--border2);border-left:3px solid ${prioridade.borda};border-radius:var(--radius-sm);padding:10px${inativa ? ';opacity:.7' : ''}">
+    <div style="font-size:13px;font-weight:600${(concluida || cancelada) ? ';text-decoration:line-through' : ''};margin-bottom:2px">${m.titulo}</div>
     <div style="font-size:11px;color:var(--muted2);margin-bottom:8px">${subtitulo || 'sem detalhes'}</div>
     ${total ? `<div style="height:4px;background:var(--border2);border-radius:2px;margin-bottom:6px"><div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px"></div></div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted2)">
       <span>${total ? `${feitas}/${total} tarefas` : (m.mission_control_team?.nome || 'sem responsável')}</span>
-      ${m.prazo && !concluida ? prioridade.badge : ''}
+      ${m.prazo && !inativa ? prioridade.badge : ''}
     </div>
     ${total && m.mission_control_team?.nome ? `<div style="font-size:11px;color:var(--blue);margin-top:6px">${m.mission_control_team.nome}</div>` : ''}
   </div>`;
@@ -2441,11 +2449,13 @@ function cardHtmlMC(m) {
 window.renderMissionControlMC = function() {
   const filtroCliente = document.getElementById('mc-filtro-cliente').value;
   const lista = missionsMC.filter(m => !filtroCliente || m.cliente_id === filtroCliente);
-  ['backlog', 'semana', 'andamento', 'concluido'].forEach(status => {
+  ['backlog', 'semana', 'andamento', 'sandbox', 'concluido', 'bacia_das_almas'].forEach(status => {
     const itens = lista.filter(m => m.status === status);
     // Ordena por urgencia (atrasado > hoje/amanha > essa semana > mais tarde > sem prazo),
-    // e dentro do mesmo nivel, o prazo mais proximo primeiro.
-    if (status !== 'concluido') {
+    // e dentro do mesmo nivel, o prazo mais proximo primeiro. Colunas de status
+    // inativo (concluido/sandbox/bacia das almas) mantem a ordem como esta, sem
+    // reordenar por prazo.
+    if (!['concluido', 'sandbox', 'bacia_das_almas'].includes(status)) {
       itens.sort((a, b) => {
         const da = diasParaPrazoMC(a.prazo), db_ = diasParaPrazoMC(b.prazo);
         const ra = prioridadeInfoMC(da, a.prazo).rank, rb = prioridadeInfoMC(db_, b.prazo).rank;
