@@ -315,6 +315,30 @@ async function enviarLembretesMissionControl() {
     }
   }
 }
+// Mission Control: arquivamento automatico das missions concluidas ha mais de
+// ARQUIVAMENTO_DIAS_MC dias. A coluna "Concluido" do board so mostra o que foi
+// concluido recentemente; o que passa do prazo vira "arquivado" (nao aparece mais
+// nas colunas do board, mas continua pesquisavel na aba Historico do Mission Control).
+const ARQUIVAMENTO_DIAS_MC = 14;
+async function arquivarMissionsConcluidasMC() {
+  console.log('[MISSION CONTROL] Verificando missions concluidas ha mais de ' + ARQUIVAMENTO_DIAS_MC + ' dias pra arquivar...');
+  const corte = new Date(Date.now() - ARQUIVAMENTO_DIAS_MC * 24 * 60 * 60 * 1000).toISOString();
+  const { data: antigas, error } = await supabase
+    .from('mission_control_missions')
+    .select('id, titulo, concluded_at')
+    .eq('status', 'concluido')
+    .lt('concluded_at', corte);
+  if (error) { console.error('[MISSION CONTROL] Erro ao buscar missions pra arquivar:', error.message); return; }
+  if (!antigas?.length) { console.log('[MISSION CONTROL] Nada pra arquivar hoje.'); return; }
+  const ids = antigas.map(m => m.id);
+  const { error: errUpdate } = await supabase
+    .from('mission_control_missions')
+    .update({ status: 'arquivado', arquivado_em: new Date().toISOString() })
+    .in('id', ids);
+  if (errUpdate) { console.error('[MISSION CONTROL] Erro ao arquivar:', errUpdate.message); return; }
+  console.log(`[MISSION CONTROL] ${ids.length} mission(s) arquivada(s): ` + antigas.map(m => m.titulo).join(', '));
+}
+
 // Checagem diaria de entregas do Ground Control — roda as 11h00 (horario de Brasilia),
 // depois que os envios do dia ja deveriam ter saido (padrao e 08:08), pra CONFERIR de
 // verdade contra o WhatsApp — nao deduzir — e corrigir qualquer status errado.
@@ -462,6 +486,14 @@ cron.schedule('*/2 * * * *', async () => {
 cron.schedule('8 11 * * 1-5', async () => {
   await enviarLembretesMissionControl();
 });
+
+// Mission Control: arquivamento automatico, uma vez por dia as 11h30 (horario de Brasilia = 14:30 UTC)
+cron.schedule('30 14 * * *', async () => {
+  await arquivarMissionsConcluidasMC();
+});
+
+// Roda tambem ao subir o servidor, pra nao depender de esperar o cron
+setTimeout(() => { arquivarMissionsConcluidasMC(); }, 20000);
 
 console.log('🚀 Aftermoon Orbit + Ground Control rodando...');
 console.log('⏰ Cobranças: 08:08 (horário de Brasília). Ground Control: checagem a cada 5 min, por horário configurado por cliente.');
