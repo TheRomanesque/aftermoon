@@ -2596,7 +2596,7 @@ window.renderHistoricoMC = function() {
 };
 
 window.mostrarAbaMC = function(aba) {
-  document.getElementById('mc-pane-board').style.display = aba === 'board' ? 'grid' : 'none';
+  document.getElementById('mc-pane-board').style.display = aba === 'board' ? 'flex' : 'none';
   document.getElementById('mc-pane-historico').style.display = aba === 'historico' ? 'block' : 'none';
   document.getElementById('mc-tab-board').style.cssText = aba === 'board' ? 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--blue);font-weight:600' : 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600';
   document.getElementById('mc-tab-historico').style.cssText = aba === 'historico' ? 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--blue);font-weight:600' : 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600';
