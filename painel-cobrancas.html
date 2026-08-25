@@ -549,10 +549,7 @@ textarea{resize:vertical;min-height:80px}
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="abrirNovaMissionMC()">+ Nova mission</button>
           <button class="btn btn-outline" onclick="abrirEquipeMC()">Equipe</button>
-          <button class="btn btn-outline" id="mc-btn-minhas" onclick="toggleMinhasTarefasMC()" style="margin-left:auto;display:flex;align-items:center;gap:6px">👤 Minhas tarefas</button>
-          <select id="mc-eu-sou" onchange="salvarEuSouMC()" style="width:auto;padding:8px 10px" title="Quem é você? Fica lembrado neste navegador."><option value="">Eu sou...</option></select>
-          <select id="mc-filtro-responsavel" onchange="renderMissionControlMC()" style="width:auto;padding:8px 10px"><option value="">Todos os responsáveis</option></select>
-          <select id="mc-filtro-cliente" onchange="renderMissionControlMC()" style="width:auto;padding:8px 10px"><option value="">Todos os clientes</option></select>
+          <select id="mc-filtro-cliente" onchange="renderMissionControlMC()" style="margin-left:auto;width:auto;padding:8px 10px"><option value="">Todos os clientes</option></select>
         </div>
         <div style="display:flex;gap:22px;border-bottom:1px solid var(--border);margin-bottom:18px">
           <div class="mc-tab active" id="mc-tab-board" onclick="mostrarAbaMC('board')" style="padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--blue);font-weight:600">Board</div>
@@ -585,11 +582,10 @@ textarea{resize:vertical;min-height:80px}
           </div>
         </div>
         <div id="mc-pane-historico" style="display:none">
-          <div style="margin-bottom:12px"><input type="text" id="mc-busca-historico" oninput="renderHistoricoMC()" placeholder="Buscar por título, cliente ou responsável..." style="width:100%;max-width:360px;padding:8px 10px"></div>
           <div class="table-card" style="overflow-x:auto">
             <table>
-              <thead><tr><th>Mission</th><th>Cliente</th><th>Responsável</th><th>Concluída em</th><th>Status</th></tr></thead>
-              <tbody id="mc-tbody-historico"><tr><td colspan="5" style="text-align:center;color:var(--muted)">Carregando...</td></tr></tbody>
+              <thead><tr><th>Mission</th><th>Cliente</th><th>Responsável</th><th>Concluída em</th></tr></thead>
+              <tbody id="mc-tbody-historico"><tr><td colspan="4" style="text-align:center;color:var(--muted)">Carregando...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -886,7 +882,6 @@ textarea{resize:vertical;min-height:80px}
     </div>
     <div class="form-actions" style="flex-wrap:wrap;gap:8px">
       <button class="btn btn-outline" onclick="excluirMissionMC()" style="color:var(--red)">Excluir mission</button>
-      <button class="btn btn-outline" id="mc-btn-arquivar" onclick="arquivarAgoraMC()" style="color:var(--muted2);display:none">🗄 Arquivar agora</button>
       <button class="btn btn-outline" onclick="enviarAgoraMC()" style="color:var(--blue)">📲 Enviar agora</button>
       <button class="btn btn-primary" onclick="salvarDetalheMC()">Salvar</button>
     </div>
@@ -1335,12 +1330,8 @@ function renderTbody(tbodyId, data, compact, semParcela=false) {
     const isHoje=p.data_vencimento===hj;
     const isVencida=p.data_vencimento<hj&&!p.enviada&&!p.quitado;
     const badge=p.quitado?'<span class="badge badge-quitado">Quitado</span>':p.enviada?'<span class="badge badge-sent">Enviada</span>':isHoje?'<span class="badge badge-today">Hoje</span>':isVencida?'<span class="badge badge-overdue">Vencida</span>':'<span class="badge badge-pending">Pendente</span>';
-    const podeReenviar = p.enviada && !p.quitado;
-    const reenvioInfo = podeReenviar && p.reenvios ? `<span title="Cobrada novamente ${p.reenvios}x${p.ultimo_reenvio_em ? ', última vez em ' + fmtData(p.ultimo_reenvio_em.slice(0,10)) : ''}" style="font-size:10.5px;color:var(--muted2);padding:0 4px;align-self:center">🔁×${p.reenvios}</span>` : '';
     const acoes=`<div class="btn-group">
       ${!p.enviada&&!p.quitado?`<button class="btn btn-whatsapp" onclick="enviarAgora('${p.id}','${nome}','${job?.job||''}','${p.numero}','${job?.total_parcelas||1}','${p.valor}','${cli?.telefone||''}','${p.data_vencimento}')">▶ Enviar</button>`:''}
-      ${podeReenviar?`<button class="btn btn-ghost" style="color:#f5a623;border:1px solid #f5a62333" title="Reenviar como lembrete amigável" onclick="cobrarNovamente('${p.id}','${nome}','${job?.job||''}','${p.numero}','${job?.total_parcelas||1}','${p.valor}','${cli?.telefone||''}','${p.data_vencimento}')">🔁 Cobrar novamente</button>`:''}
-      ${reenvioInfo}
       ${!p.quitado?`<button class="btn btn-ghost" style="color:#00c97a;border:1px solid #00c97a33" title="Marcar como quitado" onclick="marcarQuitado('${p.id}','${nome}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg></button>`:'<button class="btn btn-ghost" style="color:var(--muted2)" title="Desmarcar quitado" onclick="desmarcarQuitado(\'${p.id}\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>'}
       <button class="btn btn-ghost" onclick="abrirEditarParcelas('${job?.id}','${job?.job||''}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
       <button class="btn btn-ghost" style="color:var(--red)" onclick="confirmarExcluirCobranca('${job?.id}','${job?.job||''}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
@@ -1383,38 +1374,6 @@ async function confirmarEnvio(parcelaId,nome,telefone,msg) {
     await db.from('parcelas').update({enviada:true}).eq('id',parcelaId);
     fecharModal('modal-preview-envio');
     toast('Mensagem enviada para '+nome);
-    carregarDashboard();
-    if(document.getElementById('page-cobrancas').classList.contains('active')) carregarCobrancas();
-    if(document.getElementById('page-perfil').classList.contains('active')&&perfilClienteAtual) abrirPerfil(perfilClienteAtual.id);
-  } catch(e){toast('Erro: '+e.message,true);}
-  finally{document.getElementById('btn-confirmar-envio').textContent='▶ Confirmar envio';}
-}
-
-// COBRAR NOVAMENTE — reenvio manual de uma parcela ja enviada mas ainda nao quitada.
-// Mensagem tem tom de lembrete amigavel (nao repete o aviso de vencimento original),
-// e cada reenvio fica registrado (contador + data) pra nao perder o controle de
-// quantas vezes o cliente ja foi cobrado por aquela parcela.
-window.cobrarNovamente = function(parcelaId,nome,job,num,total,valor,telefone,dataVenc) {
-  const msg=`Oi, ${nome}! Tudo bem? 😊\n\nSó um lembrete amigável: a parcela *${num} de ${total}* do job *${job}* venceu em *${fmtData(dataVenc)}* e ainda está em aberto.\n\n💰 Valor: *${fmtBRL(valor)}*\n\nSe já tiver pago, pode desconsiderar — e se precisar de outro prazo ou tiver qualquer dúvida, é só me chamar por aqui. Obrigado! 🙏`;
-  const cor=avatarColor(nome);
-  const av=document.getElementById('preview-avatar');
-  av.style.background=cor+'20';av.style.color=cor;av.textContent=iniciais(nome);
-  document.getElementById('preview-nome-dest').textContent=nome;
-  document.getElementById('preview-fone-dest').textContent=telefone;
-  document.getElementById('preview-msg-box').textContent=msg;
-  document.getElementById('btn-confirmar-envio').onclick=()=>confirmarReenvio(parcelaId,nome,telefone,msg);
-  abrirModal('modal-preview-envio');
-};
-
-async function confirmarReenvio(parcelaId,nome,telefone,msg) {
-  document.getElementById('btn-confirmar-envio').textContent='Enviando...';
-  try {
-    const res=await fetch(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`,{method:'POST',headers:{'Content-Type':'application/json','apikey':EVOLUTION_KEY},body:JSON.stringify({number:telefone,text:msg})});
-    if(!res.ok) throw new Error('Erro '+res.status);
-    const {data:atual} = await db.from('parcelas').select('reenvios').eq('id',parcelaId).single();
-    await db.from('parcelas').update({reenvios:(atual?.reenvios||0)+1, ultimo_reenvio_em:new Date().toISOString()}).eq('id',parcelaId);
-    fecharModal('modal-preview-envio');
-    toast('Lembrete reenviado para '+nome);
     carregarDashboard();
     if(document.getElementById('page-cobrancas').classList.contains('active')) carregarCobrancas();
     if(document.getElementById('page-perfil').classList.contains('active')&&perfilClienteAtual) abrirPerfil(perfilClienteAtual.id);
@@ -2424,49 +2383,7 @@ async function carregarEquipeMC() {
   const opts = '<option value="">— ninguém —</option>' + equipeMC.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
   document.getElementById('mc-novo-responsavel').innerHTML = opts;
   document.getElementById('mc-detalhe-responsavel').innerHTML = opts;
-  document.getElementById('mc-filtro-responsavel').innerHTML = '<option value="">Todos os responsáveis</option>' + equipeMC.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
-  document.getElementById('mc-eu-sou').innerHTML = '<option value="">Eu sou...</option>' + equipeMC.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
-  const euSouId = localStorage.getItem('mc_eu_sou_id');
-  if (euSouId && equipeMC.some(p => p.id === euSouId)) document.getElementById('mc-eu-sou').value = euSouId;
-  atualizarBotaoMinhasMC();
 }
-
-// "Eu sou": cada pessoa da equipe escolhe quem ela é uma vez, e o navegador lembra
-// (localStorage, por navegador/pessoa — nao existe login individual no Orbit hoje).
-window.salvarEuSouMC = function() {
-  const id = document.getElementById('mc-eu-sou').value;
-  if (id) { localStorage.setItem('mc_eu_sou_id', id); toast('Combinado — este navegador agora é de ' + (equipeMC.find(p => p.id === id)?.nome || 'você') + '.'); }
-  else localStorage.removeItem('mc_eu_sou_id');
-  // Se o filtro "minhas tarefas" ja estava ativo, atualiza pra nova identidade na hora
-  if (document.getElementById('mc-btn-minhas').dataset.ativo === '1') {
-    document.getElementById('mc-filtro-responsavel').value = id;
-    renderMissionControlMC();
-  }
-};
-
-function atualizarBotaoMinhasMC() {
-  const btn = document.getElementById('mc-btn-minhas');
-  const ativo = btn.dataset.ativo === '1';
-  btn.style.cssText = (ativo ? 'background:var(--blue);border-color:var(--blue);color:#fff' : '') + ';margin-left:auto;display:flex;align-items:center;gap:6px';
-}
-
-// Toggle de 1 clique: mostra so as missions do responsavel salvo em "Eu sou".
-// Se ninguem foi definido ainda, guia a pessoa pro seletor em vez de falhar silenciosamente.
-window.toggleMinhasTarefasMC = function() {
-  const euSouId = localStorage.getItem('mc_eu_sou_id');
-  if (!euSouId) {
-    toast('Antes, diga quem você é no seletor "Eu sou..." ao lado.', true);
-    document.getElementById('mc-eu-sou').focus();
-    return;
-  }
-  const btn = document.getElementById('mc-btn-minhas');
-  const ativo = btn.dataset.ativo === '1';
-  const filtro = document.getElementById('mc-filtro-responsavel');
-  if (ativo) { btn.dataset.ativo = '0'; filtro.value = ''; }
-  else { btn.dataset.ativo = '1'; filtro.value = euSouId; }
-  atualizarBotaoMinhasMC();
-  renderMissionControlMC();
-};
 
 window.carregarMissionControl = async function() {
   await Promise.all([carregarClientesMC(), carregarEquipeMC()]);
@@ -2505,24 +2422,6 @@ function prioridadeInfoMC(dias, prazo) {
   return { borda: 'var(--border2)', rank: 3, badge: `<span style="background:var(--surface2);color:var(--muted2);padding:2px 6px;border-radius:6px">${fmtPrazoMC(prazo)}</span>` };
 }
 
-// Avatar de responsavel: iniciais + cor consistente por pessoa, pra reconhecer
-// "de quem e o card" so de bater o olho, sem precisar abrir (padrao Linear/Trello).
-const CORES_AVATAR_MC = ['#5b8def', '#e5484d', '#f5a623', '#00c97a', '#a970ff', '#00b8d9', '#ff7a59', '#7c93ff'];
-function corAvatarMC(chave) {
-  let h = 0;
-  for (let i = 0; i < chave.length; i++) h = (h * 31 + chave.charCodeAt(i)) >>> 0;
-  return CORES_AVATAR_MC[h % CORES_AVATAR_MC.length];
-}
-function inicialMC(nome) {
-  return nome.split(' ').filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join('');
-}
-function avatarChipMC(m) {
-  const pessoa = m.mission_control_team;
-  if (!pessoa?.nome) return '<span title="Sem responsável" style="width:20px;height:20px;border-radius:50%;border:1.5px dashed var(--border2);flex-shrink:0"></span>';
-  const cor = corAvatarMC(m.responsavel_id || pessoa.nome);
-  return `<span title="${pessoa.nome}" style="width:20px;height:20px;border-radius:50%;background:${cor};color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${inicialMC(pessoa.nome)}</span>`;
-}
-
 function cardHtmlMC(m) {
   const tarefas = m.mission_control_tasks || [];
   const feitas = tarefas.filter(t => t.concluida).length;
@@ -2536,23 +2435,20 @@ function cardHtmlMC(m) {
   const prioridade = inativa ? { borda: 'var(--border2)', badge: '' } : prioridadeInfoMC(dias, m.prazo);
   const subtitulo = [m.subtitulo, m.clientes?.nome].filter(Boolean).join(' · ');
   return `<div class="mc-card" draggable="true" data-id="${m.id}" onclick="abrirDetalheMC('${m.id}')" style="cursor:pointer;background:var(--surface2);border:1px solid var(--border2);border-left:3px solid ${prioridade.borda};border-radius:var(--radius-sm);padding:10px${inativa ? ';opacity:.7' : ''}">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:2px">
-      <div style="font-size:13px;font-weight:600${(concluida || cancelada) ? ';text-decoration:line-through' : ''}">${m.titulo}</div>
-      ${avatarChipMC(m)}
-    </div>
+    <div style="font-size:13px;font-weight:600${(concluida || cancelada) ? ';text-decoration:line-through' : ''};margin-bottom:2px">${m.titulo}</div>
     <div style="font-size:11px;color:var(--muted2);margin-bottom:8px">${subtitulo || 'sem detalhes'}</div>
     ${total ? `<div style="height:4px;background:var(--border2);border-radius:2px;margin-bottom:6px"><div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px"></div></div>` : ''}
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted2)">
-      <span>${total ? `${feitas}/${total} tarefas` : ''}</span>
+      <span>${total ? `${feitas}/${total} tarefas` : (m.mission_control_team?.nome || 'sem responsável')}</span>
       ${m.prazo && !inativa ? prioridade.badge : ''}
     </div>
+    ${total && m.mission_control_team?.nome ? `<div style="font-size:11px;color:var(--blue);margin-top:6px">${m.mission_control_team.nome}</div>` : ''}
   </div>`;
 }
 
 window.renderMissionControlMC = function() {
   const filtroCliente = document.getElementById('mc-filtro-cliente').value;
-  const filtroResponsavel = document.getElementById('mc-filtro-responsavel').value;
-  const lista = missionsMC.filter(m => (!filtroCliente || m.cliente_id === filtroCliente) && (!filtroResponsavel || m.responsavel_id === filtroResponsavel));
+  const lista = missionsMC.filter(m => !filtroCliente || m.cliente_id === filtroCliente);
   ['backlog', 'semana', 'andamento', 'concluido', 'sandbox', 'bacia_das_almas'].forEach(status => {
     const itens = lista.filter(m => m.status === status);
     // Ordena por urgencia (atrasado > hoje/amanha > essa semana > mais tarde > sem prazo),
@@ -2573,30 +2469,18 @@ window.renderMissionControlMC = function() {
   });
   ativarDragDropMC();
 
-  renderHistoricoMC();
-};
-
-window.renderHistoricoMC = function() {
-  const filtroCliente = document.getElementById('mc-filtro-cliente').value;
-  const filtroResponsavel = document.getElementById('mc-filtro-responsavel').value;
-  const busca = (document.getElementById('mc-busca-historico')?.value || '').trim().toLowerCase();
-  let historico = missionsMC.filter(m => (m.status === 'concluido' || m.status === 'arquivado')
-    && (!filtroCliente || m.cliente_id === filtroCliente)
-    && (!filtroResponsavel || m.responsavel_id === filtroResponsavel));
-  if (busca) historico = historico.filter(m => [m.titulo, m.subtitulo, m.clientes?.nome, m.mission_control_team?.nome].filter(Boolean).join(' ').toLowerCase().includes(busca));
-  historico.sort((a, b) => new Date(b.concluded_at || b.updated_at) - new Date(a.concluded_at || a.updated_at));
+  const historico = lista.filter(m => m.status === 'concluido').sort((a, b) => new Date(b.concluded_at || b.updated_at) - new Date(a.concluded_at || a.updated_at));
   document.getElementById('mc-count-historico').textContent = historico.length;
-  document.getElementById('mc-tbody-historico').innerHTML = historico.length ? historico.map(m => `<tr style="cursor:pointer" onclick="abrirDetalheMC('${m.id}')">
+  document.getElementById('mc-tbody-historico').innerHTML = historico.length ? historico.map(m => `<tr>
     <td style="font-size:12px">${m.titulo}</td>
     <td style="font-size:12px">${m.clientes?.nome || '—'}</td>
     <td style="font-size:12px">${m.mission_control_team?.nome || '—'}</td>
     <td style="font-size:12px">${m.concluded_at ? new Date(m.concluded_at).toLocaleDateString('pt-BR') : '—'}</td>
-    <td style="font-size:12px">${m.status === 'arquivado' ? '<span style="background:var(--surface2);color:var(--muted2);padding:2px 6px;border-radius:6px">arquivada</span>' : '<span style="background:var(--accent-dim,var(--surface2));color:var(--accent);padding:2px 6px;border-radius:6px">concluída</span>'}</td>
-  </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--muted)">Nenhuma mission encontrada</td></tr>';
+  </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--muted)">Nenhuma mission concluída ainda</td></tr>';
 };
 
 window.mostrarAbaMC = function(aba) {
-  document.getElementById('mc-pane-board').style.display = aba === 'board' ? 'flex' : 'none';
+  document.getElementById('mc-pane-board').style.display = aba === 'board' ? 'grid' : 'none';
   document.getElementById('mc-pane-historico').style.display = aba === 'historico' ? 'block' : 'none';
   document.getElementById('mc-tab-board').style.cssText = aba === 'board' ? 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--blue);font-weight:600' : 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600';
   document.getElementById('mc-tab-historico').style.cssText = aba === 'historico' ? 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--blue);font-weight:600' : 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600';
@@ -2675,20 +2559,7 @@ window.abrirDetalheMC = function(id) {
   mcSetDate('mc-detalhe-prazo', m.prazo || '');
   document.getElementById('mc-detalhe-notas').value = m.notas || '';
   renderChecklistMC();
-  document.getElementById('mc-btn-arquivar').style.display = m.status === 'concluido' ? 'inline-flex' : 'none';
   abrirModal('modal-mc-detalhe');
-};
-
-// Arquivamento manual: quem quiser tirar uma mission concluida do board antes
-// dos 14 dias (arquivamento automatico do cron) pode fazer na hora por aqui.
-window.arquivarAgoraMC = async function() {
-  if (!missionAtualMC) return;
-  const payload = { status: 'arquivado', arquivado_em: new Date().toISOString() };
-  const { error } = await db.from('mission_control_missions').update(payload).eq('id', missionAtualMC.id);
-  if (error) return toast('Erro: ' + error.message, true);
-  fecharModal('modal-mc-detalhe');
-  toast('Mission arquivada — agora só aparece no Histórico.');
-  carregarMissionControl();
 };
 
 function renderChecklistMC() {
