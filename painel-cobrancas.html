@@ -2434,7 +2434,7 @@ function cardHtmlMC(m) {
   const inativa = concluida || cancelada || pausada;
   const prioridade = inativa ? { borda: 'var(--border2)', badge: '' } : prioridadeInfoMC(dias, m.prazo);
   const subtitulo = [m.subtitulo, m.clientes?.nome].filter(Boolean).join(' · ');
-  return `<div class="mc-card" draggable="true" data-id="${m.id}" onclick="abrirDetalheMC('${m.id}')" style="cursor:pointer;background:var(--surface2);border:1px solid var(--border2);border-left:3px solid ${prioridade.borda};border-radius:var(--radius-sm);padding:10px${inativa ? ';opacity:.7' : ''}">
+  return `<div class="mc-card" data-id="${m.id}" onclick="abrirDetalheMC('${m.id}')" style="cursor:pointer;background:var(--surface2);border:1px solid var(--border2);border-left:3px solid ${prioridade.borda};border-radius:var(--radius-sm);padding:10px${inativa ? ';opacity:.7' : ''}">
     <div style="font-size:13px;font-weight:600${(concluida || cancelada) ? ';text-decoration:line-through' : ''};margin-bottom:2px">${m.titulo}</div>
     <div style="font-size:11px;color:var(--muted2);margin-bottom:8px">${subtitulo || 'sem detalhes'}</div>
     ${total ? `<div style="height:4px;background:var(--border2);border-radius:2px;margin-bottom:6px"><div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px"></div></div>` : ''}
@@ -2486,82 +2486,113 @@ window.mostrarAbaMC = function(aba) {
   document.getElementById('mc-tab-historico').style.cssText = aba === 'historico' ? 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--text);border-bottom:2px solid var(--blue);font-weight:600' : 'padding:10px 2px;font-size:13px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;font-weight:600';
 };
 
-let __mcGlobalDragGuardInstalled = false;
-let __mcDragOverCount = 0;
-let __mcDragLastLog = 0;
-function __mcLog(msg) {
-  try {
-    const t = performance.now().toFixed(1);
-    console.log('[MC-DRAG ' + t + 'ms] ' + msg);
-  } catch (err) {}
-}
+// Drag-and-drop manual via Pointer Events. A API nativa de HTML5 drag-and-drop
+// (draggable="true" + dragstart/dragover/drop) trava o navegador em alguns
+// mouses/trackpads: o dragstart dispara, mas o Chrome nunca entrega o proximo
+// dragover (fica esperando callbacks do SO que nao chegam) e a aba fica travada
+// ate um reload forcado. Isso foi confirmado com logs em producao: dragstart
+// aparece no console e nada mais depois disso. Por isso o drag foi reescrito do
+// zero usando pointerdown/pointermove/pointerup, que nao dependem dessa camada
+// nativa do navegador.
 function ativarDragDropMC() {
   const board = document.getElementById('mc-pane-board');
-  if (!__mcGlobalDragGuardInstalled) {
-    __mcGlobalDragGuardInstalled = true;
-    // Sem isso, soltar um card fora de uma coluna valida faz o Chrome tentar
-    // navegar usando o texto solto (o id da mission), travando a aba inteira.
-    window.addEventListener('dragover', e => { e.preventDefault(); });
-    window.addEventListener('drop', e => { e.preventDefault(); __mcLog('window drop (fora de zona valida ou fallback)'); });
-  }
   document.querySelectorAll('.mc-card').forEach(card => {
-    card.addEventListener('dragstart', e => {
-      __mcDragOverCount = 0;
-      __mcLog('dragstart card=' + card.getAttribute('data-id'));
-      e.dataTransfer.setData('text/plain', card.getAttribute('data-id'));
-      setTimeout(() => card.style.opacity = '0.4', 0);
-      board.classList.add('mc-dragging');
-    });
-    card.addEventListener('dragend', () => {
-      __mcLog('dragend card=' + card.getAttribute('data-id') + ' totalDragoverEvents=' + __mcDragOverCount);
-      card.style.opacity = '1';
-      board.classList.remove('mc-dragging');
-      document.querySelectorAll('.mc-drop').forEach(z => z.classList.remove('mc-drop-active'));
-    });
-  });
-  document.querySelectorAll('.mc-drop').forEach(zone => {
-    zone.ondragover = e => {
-      e.preventDefault();
-      __mcDragOverCount++;
-      const now = performance.now();
-      if (now - __mcDragLastLog > 500) {
-        __mcDragLastLog = now;
-        __mcLog('dragover em curso, zona=' + zone.getAttribute('data-status') + ', total ate agora=' + __mcDragOverCount);
+    card.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      const id = card.getAttribute('data-id');
+      const startX = e.clientX, startY = e.clientY;
+      const origRect = card.getBoundingClientRect();
+      const offsetX = startX - origRect.left;
+      const offsetY = startY - origRect.top;
+      let dragging = false;
+      let ghost = null;
+
+      function updateZoneHighlight(clientX, clientY) {
+        document.querySelectorAll('.mc-drop').forEach(z => z.classList.remove('mc-drop-active'));
+        if (ghost) ghost.style.display = 'none';
+        const under = document.elementFromPoint(clientX, clientY);
+        if (ghost) ghost.style.display = '';
+        const zone = under ? under.closest('.mc-drop') : null;
+        if (zone) zone.classList.add('mc-drop-active');
+        return zone;
       }
-    };
-    zone.ondragenter = e => { e.preventDefault(); __mcLog('dragenter zona=' + zone.getAttribute('data-status')); zone.classList.add('mc-drop-active'); };
-    zone.ondragleave = () => { __mcLog('dragleave zona=' + zone.getAttribute('data-status')); zone.classList.remove('mc-drop-active'); };
-    zone.ondrop = async e => {
-      try {
-        __mcLog('drop INICIO zona=' + zone.getAttribute('data-status'));
-        e.preventDefault();
-        zone.classList.remove('mc-drop-active');
-        const id = e.dataTransfer.getData('text/plain');
+
+      function onMove(ev) {
+        const dx = ev.clientX - startX, dy = ev.clientY - startY;
+        if (!dragging) {
+          if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+          dragging = true;
+          card.__justDragged = false;
+          card.style.opacity = '0.4';
+          board.classList.add('mc-dragging');
+          ghost = card.cloneNode(true);
+          ghost.style.position = 'fixed';
+          ghost.style.width = origRect.width + 'px';
+          ghost.style.left = (ev.clientX - offsetX) + 'px';
+          ghost.style.top = (ev.clientY - offsetY) + 'px';
+          ghost.style.pointerEvents = 'none';
+          ghost.style.zIndex = '9999';
+          ghost.style.opacity = '0.92';
+          ghost.style.boxShadow = '0 10px 28px rgba(0,0,0,.45)';
+          ghost.style.transform = 'rotate(1.5deg)';
+          ghost.style.margin = '0';
+          document.body.appendChild(ghost);
+        }
+        if (ghost) {
+          ghost.style.left = (ev.clientX - offsetX) + 'px';
+          ghost.style.top = (ev.clientY - offsetY) + 'px';
+        }
+        updateZoneHighlight(ev.clientX, ev.clientY);
+      }
+
+      async function onUp(ev) {
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        document.removeEventListener('pointercancel', onCancel);
+        if (!dragging) return;
+        card.__justDragged = true;
+        card.style.opacity = '1';
+        board.classList.remove('mc-dragging');
+        const zone = updateZoneHighlight(ev.clientX, ev.clientY);
+        document.querySelectorAll('.mc-drop').forEach(z => z.classList.remove('mc-drop-active'));
+        if (ghost) { ghost.remove(); ghost = null; }
+        if (!zone) return;
         const novoStatus = zone.getAttribute('data-status');
         const m = missionsMC.find(x => x.id === id);
-        if (!m || m.status === novoStatus) { __mcLog('drop CANCELADO (mesmo status ou nao encontrado)'); return; }
+        if (!m || m.status === novoStatus) return;
         m.status = novoStatus;
         const payload = { status: novoStatus, updated_at: new Date().toISOString() };
         if (novoStatus === 'concluido') { payload.concluded_at = new Date().toISOString(); m.concluded_at = payload.concluded_at; }
-        __mcLog('drop: agendando render via setTimeout');
-        // Nao mexer no DOM aqui dentro do handler de drop: o card arrastado ainda
-        // esta no meio do ciclo de vida do drag nativo do navegador (dragend ainda
-        // nao disparou). Recriar o board agora destroi o elemento sendo arrastado e
-        // trava o navegador em alguns mouses/trackpads. Adia pro proximo tick.
-        setTimeout(() => {
-          __mcLog('render adiado: INICIO');
-          renderMissionControlMC();
-          __mcLog('render adiado: FIM');
-        }, 0);
-        __mcLog('drop: antes do update no banco');
+        renderMissionControlMC();
         const { error } = await db.from('mission_control_missions').update(payload).eq('id', id);
-        __mcLog('drop: depois do update no banco, error=' + (error ? error.message : 'nenhum'));
         if (error) toast('Erro ao mover: ' + error.message, true);
-      } catch (err) {
-        __mcLog('EXCECAO no ondrop: ' + (err && err.message ? err.message : String(err)));
-        console.error(err);
       }
-    };
+
+      function onCancel() {
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        document.removeEventListener('pointercancel', onCancel);
+        if (dragging) {
+          card.style.opacity = '1';
+          board.classList.remove('mc-dragging');
+          document.querySelectorAll('.mc-drop').forEach(z => z.classList.remove('mc-drop-active'));
+          if (ghost) { ghost.remove(); ghost = null; }
+        }
+      }
+
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+      document.addEventListener('pointercancel', onCancel);
+    });
+    // Evita que o clique disparado logo apos soltar um drag reabra o card
+    // (abrirDetalheMC via onclick inline) quando o usuario so queria mover o card.
+    card.addEventListener('click', e => {
+      if (card.__justDragged) {
+        card.__justDragged = false;
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }
+    }, true);
   });
 }
 
