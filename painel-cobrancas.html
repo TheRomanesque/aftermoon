@@ -2525,6 +2525,7 @@ function ativarDragDropMC() {
           card.__justDragged = false;
           card.style.opacity = '0.4';
           board.classList.add('mc-dragging');
+          document.body.style.userSelect = 'none';
           ghost = card.cloneNode(true);
           ghost.style.position = 'fixed';
           ghost.style.width = origRect.width + 'px';
@@ -2553,6 +2554,7 @@ function ativarDragDropMC() {
         card.__justDragged = true;
         card.style.opacity = '1';
         board.classList.remove('mc-dragging');
+        document.body.style.userSelect = '';
         const zone = updateZoneHighlight(ev.clientX, ev.clientY);
         document.querySelectorAll('.mc-drop').forEach(z => z.classList.remove('mc-drop-active'));
         if (ghost) { ghost.remove(); ghost = null; }
@@ -2575,6 +2577,7 @@ function ativarDragDropMC() {
         if (dragging) {
           card.style.opacity = '1';
           board.classList.remove('mc-dragging');
+          document.body.style.userSelect = '';
           document.querySelectorAll('.mc-drop').forEach(z => z.classList.remove('mc-drop-active'));
           if (ghost) { ghost.remove(); ghost = null; }
         }
