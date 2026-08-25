@@ -2487,48 +2487,80 @@ window.mostrarAbaMC = function(aba) {
 };
 
 let __mcGlobalDragGuardInstalled = false;
+let __mcDragOverCount = 0;
+let __mcDragLastLog = 0;
+function __mcLog(msg) {
+  try {
+    const t = performance.now().toFixed(1);
+    console.log('[MC-DRAG ' + t + 'ms] ' + msg);
+  } catch (err) {}
+}
 function ativarDragDropMC() {
   const board = document.getElementById('mc-pane-board');
   if (!__mcGlobalDragGuardInstalled) {
     __mcGlobalDragGuardInstalled = true;
     // Sem isso, soltar um card fora de uma coluna valida faz o Chrome tentar
     // navegar usando o texto solto (o id da mission), travando a aba inteira.
-    window.addEventListener('dragover', e => e.preventDefault());
-    window.addEventListener('drop', e => e.preventDefault());
+    window.addEventListener('dragover', e => { e.preventDefault(); });
+    window.addEventListener('drop', e => { e.preventDefault(); __mcLog('window drop (fora de zona valida ou fallback)'); });
   }
   document.querySelectorAll('.mc-card').forEach(card => {
     card.addEventListener('dragstart', e => {
+      __mcDragOverCount = 0;
+      __mcLog('dragstart card=' + card.getAttribute('data-id'));
       e.dataTransfer.setData('text/plain', card.getAttribute('data-id'));
       setTimeout(() => card.style.opacity = '0.4', 0);
       board.classList.add('mc-dragging');
     });
     card.addEventListener('dragend', () => {
+      __mcLog('dragend card=' + card.getAttribute('data-id') + ' totalDragoverEvents=' + __mcDragOverCount);
       card.style.opacity = '1';
       board.classList.remove('mc-dragging');
       document.querySelectorAll('.mc-drop').forEach(z => z.classList.remove('mc-drop-active'));
     });
   });
   document.querySelectorAll('.mc-drop').forEach(zone => {
-    zone.ondragover = e => e.preventDefault();
-    zone.ondragenter = e => { e.preventDefault(); zone.classList.add('mc-drop-active'); };
-    zone.ondragleave = () => zone.classList.remove('mc-drop-active');
-    zone.ondrop = async e => {
+    zone.ondragover = e => {
       e.preventDefault();
-      zone.classList.remove('mc-drop-active');
-      const id = e.dataTransfer.getData('text/plain');
-      const novoStatus = zone.getAttribute('data-status');
-      const m = missionsMC.find(x => x.id === id);
-      if (!m || m.status === novoStatus) return;
-      m.status = novoStatus;
-      const payload = { status: novoStatus, updated_at: new Date().toISOString() };
-      if (novoStatus === 'concluido') { payload.concluded_at = new Date().toISOString(); m.concluded_at = payload.concluded_at; }
-      // Nao mexer no DOM aqui dentro do handler de drop: o card arrastado ainda
-      // esta no meio do ciclo de vida do drag nativo do navegador (dragend ainda
-      // nao disparou). Recriar o board agora destroi o elemento sendo arrastado e
-      // trava o navegador em alguns mouses/trackpads. Adia pro proximo tick.
-      setTimeout(() => renderMissionControlMC(), 0);
-      const { error } = await db.from('mission_control_missions').update(payload).eq('id', id);
-      if (error) toast('Erro ao mover: ' + error.message, true);
+      __mcDragOverCount++;
+      const now = performance.now();
+      if (now - __mcDragLastLog > 500) {
+        __mcDragLastLog = now;
+        __mcLog('dragover em curso, zona=' + zone.getAttribute('data-status') + ', total ate agora=' + __mcDragOverCount);
+      }
+    };
+    zone.ondragenter = e => { e.preventDefault(); __mcLog('dragenter zona=' + zone.getAttribute('data-status')); zone.classList.add('mc-drop-active'); };
+    zone.ondragleave = () => { __mcLog('dragleave zona=' + zone.getAttribute('data-status')); zone.classList.remove('mc-drop-active'); };
+    zone.ondrop = async e => {
+      try {
+        __mcLog('drop INICIO zona=' + zone.getAttribute('data-status'));
+        e.preventDefault();
+        zone.classList.remove('mc-drop-active');
+        const id = e.dataTransfer.getData('text/plain');
+        const novoStatus = zone.getAttribute('data-status');
+        const m = missionsMC.find(x => x.id === id);
+        if (!m || m.status === novoStatus) { __mcLog('drop CANCELADO (mesmo status ou nao encontrado)'); return; }
+        m.status = novoStatus;
+        const payload = { status: novoStatus, updated_at: new Date().toISOString() };
+        if (novoStatus === 'concluido') { payload.concluded_at = new Date().toISOString(); m.concluded_at = payload.concluded_at; }
+        __mcLog('drop: agendando render via setTimeout');
+        // Nao mexer no DOM aqui dentro do handler de drop: o card arrastado ainda
+        // esta no meio do ciclo de vida do drag nativo do navegador (dragend ainda
+        // nao disparou). Recriar o board agora destroi o elemento sendo arrastado e
+        // trava o navegador em alguns mouses/trackpads. Adia pro proximo tick.
+        setTimeout(() => {
+          __mcLog('render adiado: INICIO');
+          renderMissionControlMC();
+          __mcLog('render adiado: FIM');
+        }, 0);
+        __mcLog('drop: antes do update no banco');
+        const { error } = await db.from('mission_control_missions').update(payload).eq('id', id);
+        __mcLog('drop: depois do update no banco, error=' + (error ? error.message : 'nenhum'));
+        if (error) toast('Erro ao mover: ' + error.message, true);
+      } catch (err) {
+        __mcLog('EXCECAO no ondrop: ' + (err && err.message ? err.message : String(err)));
+        console.error(err);
+      }
     };
   });
 }
