@@ -736,7 +736,7 @@ textarea{resize:vertical;min-height:80px}
       <select id="gc-novo-cliente"><option value="">Selecione o cliente</option></select>
     </div>
     <div class="grid2">
-      <div class="field"><label>Data</label><input type="text" class="cal-input" id="gc-novo-data" readonly onclick="mcOpenCalendar(this)" placeholder="Selecionar data"></div>
+      <div class="field"><label>Data</label><input type="text" class="cal-input" id="gc-novo-data" onclick="mcOpenCalendar(this)" oninput="mcMaskDateInput(this)" onblur="mcParseDateInput(this)" placeholder="dd/mm/aaaa"></div>
       <div class="field"><label>Tipo</label>
         <select id="gc-novo-tipo"><option>Stories</option><option>Feed</option><option>Reels</option><option>Vídeo</option></select>
       </div>
@@ -818,7 +818,7 @@ textarea{resize:vertical;min-height:80px}
   <div class="modal" style="width:420px">
     <div class="modal-header"><div class="modal-title">Agendar publicação</div><button class="modal-close" onclick="fecharModal('modal-lp-agendar')">✕</button></div>
     <input type="hidden" id="lp-agendar-id">
-    <div class="field"><label>Data</label><input type="text" class="cal-input" id="lp-agendar-data" readonly onclick="mcOpenCalendar(this)" placeholder="Selecionar data"></div>
+    <div class="field"><label>Data</label><input type="text" class="cal-input" id="lp-agendar-data" onclick="mcOpenCalendar(this)" oninput="mcMaskDateInput(this)" onblur="mcParseDateInput(this)" placeholder="dd/mm/aaaa"></div>
     <div class="field"><label>Hora (horário de Brasília)</label><input type="time" id="lp-agendar-hora" value="09:00"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModal('modal-lp-agendar')">Cancelar</button>
@@ -869,7 +869,7 @@ textarea{resize:vertical;min-height:80px}
     <div style="font-size:12px;color:var(--muted2);margin-bottom:14px" id="mc-detalhe-subtitulo"></div>
     <div class="grid2">
       <div class="field"><label>Responsável</label><select id="mc-detalhe-responsavel"><option value="">— ninguém —</option></select></div>
-      <div class="field"><label>Prazo</label><input type="text" class="cal-input" id="mc-detalhe-prazo" readonly onclick="mcOpenCalendar(this)" placeholder="Selecionar data"></div>
+      <div class="field"><label>Prazo</label><input type="text" class="cal-input" id="mc-detalhe-prazo" onclick="mcOpenCalendar(this)" oninput="mcMaskDateInput(this)" onblur="mcParseDateInput(this)" placeholder="dd/mm/aaaa"></div>
     </div>
     <div class="field"><label>Anotações</label><textarea id="mc-detalhe-notas" rows="3" placeholder="Escreva uma anotação sobre esta mission..."></textarea></div>
     <div class="field">
@@ -898,7 +898,7 @@ textarea{resize:vertical;min-height:80px}
       <div class="field"><label>Cliente</label><select id="mc-novo-cliente"><option value="">— nenhum —</option></select></div>
       <div class="field"><label>Responsável</label><select id="mc-novo-responsavel"><option value="">— ninguém —</option></select></div>
     </div>
-    <div class="field"><label>Prazo</label><input type="text" class="cal-input" id="mc-novo-prazo" readonly onclick="mcOpenCalendar(this)" placeholder="Selecionar data"></div>
+    <div class="field"><label>Prazo</label><input type="text" class="cal-input" id="mc-novo-prazo" onclick="mcOpenCalendar(this)" oninput="mcMaskDateInput(this)" onblur="mcParseDateInput(this)" placeholder="dd/mm/aaaa"></div>
     <div class="form-actions">
       <button class="btn btn-outline" onclick="fecharModal('modal-mc-nova')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarNovaMissionMC()">Criar mission</button>
@@ -958,6 +958,26 @@ function mcGetDate(inputId) {
   const el = document.getElementById(inputId);
   return (el && el.dataset.iso) || '';
 }
+window.mcMaskDateInput = function(el) {
+  let digits = el.value.replace(/\D/g,'').slice(0,8);
+  let out = digits;
+  if (digits.length > 4) out = digits.slice(0,2)+'/'+digits.slice(2,4)+'/'+digits.slice(4);
+  else if (digits.length > 2) out = digits.slice(0,2)+'/'+digits.slice(2);
+  el.value = out;
+};
+window.mcParseDateInput = function(el) {
+  const v = (el.value||'').trim();
+  if (!v) { el.dataset.iso = ''; return; }
+  const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return;
+  const d = parseInt(m[1],10), mo = parseInt(m[2],10), y = parseInt(m[3],10);
+  if (mo<1||mo>12||d<1||d>31) return;
+  const dt = new Date(y, mo-1, d);
+  if (dt.getMonth() !== mo-1 || dt.getDate() !== d) return;
+  const iso = `${y}-${pad2(mo)}-${pad2(d)}`;
+  el.dataset.iso = iso;
+  el.value = fmtData(iso);
+};
 
 window.mcOpenCalendar = function(el) {
   closeCalPicker();
@@ -977,7 +997,7 @@ window.mcOpenCalendar = function(el) {
 
 function calOutsideClick(e) {
   const pop = document.getElementById('cal-popup-active');
-  if (pop && !pop.contains(e.target) && e.target !== calPickerTarget) closeCalPicker();
+  if (pop && !e.composedPath().includes(pop) && e.target !== calPickerTarget) closeCalPicker();
 }
 
 window.closeCalPicker = function() {
@@ -1418,7 +1438,7 @@ window.abrirEditarParcelas = async function(cobId,jobNome) {
   document.getElementById('edit-parcelas-lista').innerHTML=`
     <p style="font-size:12px;color:var(--muted2);margin-bottom:16px">Job: <strong style="color:var(--text)">${jobNome}</strong></p>
     ${data.map(p=>`<div class="parcela-row"><div class="parcela-num">${p.numero}</div>
-    <input type="text" class="cal-input" id="ep-d-${p.id}" data-iso="${p.data_vencimento}" value="${fmtData(p.data_vencimento)}" readonly onclick="mcOpenCalendar(this)">
+    <input type="text" class="cal-input" id="ep-d-${p.id}" data-iso="${p.data_vencimento}" value="${fmtData(p.data_vencimento)}" onclick="mcOpenCalendar(this)" oninput="mcMaskDateInput(this)" onblur="mcParseDateInput(this)">
     <input type="number" id="ep-v-${p.id}" value="${p.valor}"></div>`).join('')}`;
   abrirModal('modal-editar-parcelas');
 };
@@ -1496,7 +1516,7 @@ window.gerarParcelas = function() {
   for(let i=1;i<=n;i++){
     const d=new Date(hj);d.setMonth(d.getMonth()+(i-1));
     const isoP = d.toISOString().split('T')[0];
-    html+=`<div class="parcela-row"><div class="parcela-num">${i}</div><input type="text" class="cal-input" id="parc-d-${i}" data-iso="${isoP}" value="${fmtData(isoP)}" readonly onclick="mcOpenCalendar(this)"><input type="number" id="parc-v-${i}" value="${(total/n).toFixed(2)}"></div>`;
+    html+=`<div class="parcela-row"><div class="parcela-num">${i}</div><input type="text" class="cal-input" id="parc-d-${i}" data-iso="${isoP}" value="${fmtData(isoP)}" onclick="mcOpenCalendar(this)" oninput="mcMaskDateInput(this)" onblur="mcParseDateInput(this)"><input type="number" id="parc-v-${i}" value="${(total/n).toFixed(2)}"></div>`;
   }
   document.getElementById('parcelas-lista').innerHTML=html;
 };
