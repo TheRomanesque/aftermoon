@@ -1352,7 +1352,7 @@ function renderTbody(tbodyId, data, compact, semParcela=false) {
     const badge=p.quitado?'<span class="badge badge-quitado">Quitado</span>':p.enviada?'<span class="badge badge-sent">Enviada</span>':isHoje?'<span class="badge badge-today">Hoje</span>':isVencida?'<span class="badge badge-overdue">Vencida</span>':'<span class="badge badge-pending">Pendente</span>';
     const acoes=`<div class="btn-group">
       ${!p.enviada&&!p.quitado?`<button class="btn btn-whatsapp" onclick="enviarAgora('${p.id}','${nome}','${job?.job||''}','${p.numero}','${job?.total_parcelas||1}','${p.valor}','${cli?.telefone||''}','${p.data_vencimento}')">▶ Enviar</button>`:''}
-      ${!p.quitado?`<button class="btn btn-ghost" style="color:#00c97a;border:1px solid #00c97a33" title="Marcar como quitado" onclick="marcarQuitado('${p.id}','${nome}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg></button>`:'<button class="btn btn-ghost" style="color:var(--muted2)" title="Desmarcar quitado" onclick="desmarcarQuitado(\'${p.id}\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>'}
+      ${!p.quitado?`<button class="btn btn-ghost" style="color:#00c97a;border:1px solid #00c97a33" title="Marcar como quitado" onclick="marcarQuitado('${p.id}','${nome}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg></button>`:`<button class="btn btn-ghost" style="color:var(--muted2)" title="Desmarcar quitado" onclick="desmarcarQuitado('${p.id}','${nome}','${job?.job||''}','${p.numero}','${job?.total_parcelas||1}','${p.valor}','${cli?.telefone||''}','${p.data_vencimento}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>`}
       <button class="btn btn-ghost" onclick="abrirEditarParcelas('${job?.id}','${job?.job||''}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
       <button class="btn btn-ghost" style="color:var(--red)" onclick="confirmarExcluirCobranca('${job?.id}','${job?.job||''}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
     </div>`;
@@ -1409,17 +1409,39 @@ window.marcarQuitado = async function(parcelaId, nome) {
   if(document.getElementById('page-cobrancas').classList.contains('active')) carregarCobrancas();
   if(document.getElementById('page-perfil').classList.contains('active')&&perfilClienteAtual) abrirPerfil(perfilClienteAtual.id);
 };
-window.desmarcarQuitado = async function(parcelaId) {
+window.desmarcarQuitado = async function(parcelaId,nome,job,num,total,valor,telefone,dataVenc) {
   await db.from('parcelas').update({ quitado: false, enviada: false }).eq('id', parcelaId);
-  toast('✓ Quitado removido');
+  toast('✓ Quitado removido — parcela voltou para pendente');
   carregarDashboard();
   if(document.getElementById('page-cobrancas').classList.contains('active')) carregarCobrancas();
   if(document.getElementById('page-perfil').classList.contains('active')&&perfilClienteAtual) abrirPerfil(perfilClienteAtual.id);
+  if(!telefone) return;
+  document.getElementById('confirm-nome').textContent=nome||'';
+  document.getElementById('confirm-texto').textContent='A parcela voltou para pendente. Deseja avisar '+(nome||'o cliente')+' que ela está atrasada?';
+  const btnConfirm=document.getElementById('btn-confirmar-excluir');
+  btnConfirm.textContent='Enviar mensagem';
+  btnConfirm.className='btn btn-primary';
+  btnConfirm.onclick=()=>{ fecharModal('modal-confirmar'); enviarMensagemAtraso(parcelaId,nome,job,num,total,valor,telefone,dataVenc); };
+  abrirModal('modal-confirmar');
+};
+window.enviarMensagemAtraso = function(parcelaId,nome,job,num,total,valor,telefone,dataVenc) {
+  const msg=`Olá, ${nome}! 👋\n\nA parcela *${num} de ${total}* do job *${job}*, no valor de *${fmtBRL(valor)}*, venceu em *${fmtData(dataVenc)}* e está em aberto.\n\nPode nos ajudar a regularizar assim que possível? Qualquer dúvida, estou à disposição. Obrigado! 🙏`;
+  const cor=avatarColor(nome);
+  const av=document.getElementById('preview-avatar');
+  av.style.background=cor+'20';av.style.color=cor;av.textContent=iniciais(nome);
+  document.getElementById('preview-nome-dest').textContent=nome;
+  document.getElementById('preview-fone-dest').textContent=telefone;
+  document.getElementById('preview-msg-box').textContent=msg;
+  document.getElementById('btn-confirmar-envio').onclick=()=>confirmarEnvio(parcelaId,nome,telefone,msg);
+  abrirModal('modal-preview-envio');
 };
 window.confirmarExcluirCobranca = function(cobId,jobNome) {
   document.getElementById('confirm-nome').textContent=jobNome;
   document.getElementById('confirm-texto').textContent='Isso excluirá o job e todas as parcelas. Ação irreversível.';
-  document.getElementById('btn-confirmar-excluir').onclick=()=>excluirCobranca(cobId);
+  const btnConfirm=document.getElementById('btn-confirmar-excluir');
+  btnConfirm.textContent='Excluir';
+  btnConfirm.className='btn btn-danger';
+  btnConfirm.onclick=()=>excluirCobranca(cobId);
   abrirModal('modal-confirmar');
 };
 async function excluirCobranca(cobId) {
@@ -1485,7 +1507,10 @@ window.salvarEdicaoCliente = async function() {
 window.confirmarExcluirCliente = function(id,nome) {
   document.getElementById('confirm-nome').textContent=nome;
   document.getElementById('confirm-texto').textContent='Isso excluirá o cliente e todas as suas cobranças. Ação irreversível.';
-  document.getElementById('btn-confirmar-excluir').onclick=()=>excluirCliente(id);
+  const btnConfirm=document.getElementById('btn-confirmar-excluir');
+  btnConfirm.textContent='Excluir';
+  btnConfirm.className='btn btn-danger';
+  btnConfirm.onclick=()=>excluirCliente(id);
   abrirModal('modal-confirmar');
 };
 async function excluirCliente(id) {
@@ -1696,7 +1721,10 @@ window.excluirSelecionadosGC = function() {
   if (!marcados.length) return;
   document.getElementById('confirm-nome').textContent = marcados.length + ' conteúdo(s) selecionado(s)';
   document.getElementById('confirm-texto').textContent = 'Isso cancela o envio de todos os itens selecionados. Pode reagendar depois se precisar.';
-  document.getElementById('btn-confirmar-excluir').onclick = async () => {
+  const btnConfirmGC=document.getElementById('btn-confirmar-excluir');
+  btnConfirmGC.textContent='Excluir';
+  btnConfirmGC.className='btn btn-danger';
+  btnConfirmGC.onclick = async () => {
     const ids = marcados.map(chk => chk.value);
     await db.from('ground_control_conteudo').update({status:'Cancelado'}).in('id', ids);
     fecharModal('modal-confirmar');
