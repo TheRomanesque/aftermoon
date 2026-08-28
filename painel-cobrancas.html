@@ -1394,7 +1394,7 @@ function montarTelefones(cli,nomeCliente) {
   return lista;
 }
 function montarMensagemCobranca(nome,job,num,total,valor,dataVenc,atrasada) {
-  if(atrasada) return `Oi, ${nome}! Tudo certo? 😊\n\nPassando pra avisar, numa boa: a parcela *${num} de ${total}* do job *${job}* (💰 *${fmtBRL(valor)}*) tinha vencimento em *${fmtData(dataVenc)}* e já passou do prazo.\n\nSem problema nenhum — só me avisa como podemos resolver, ou se precisar de mais alguns diazinhos! Qualquer coisa, tô por aqui. 🙏`;
+  if(atrasada) return `Olá! Passando para informar que a parcela:\n\n*${num} de ${total}* do job *${job}*, no valor de *${fmtBRL(valor)}*, com vencimento em *${fmtData(dataVenc)}*, está em atraso.\n\nPedimos a gentileza de regularizar o pagamento o quanto antes.\n\nQualquer dúvida ou necessidade de ajuste no prazo, é só nos chamar.\n\nAftermoon Orbit`;
   return `Olá, ${nome}! 👋\n\nPassando para lembrar que a parcela *${num} de ${total}* do job *${job}* vence em *${fmtData(dataVenc)}*.\n\n💰 Valor: *${fmtBRL(valor)}*\n\nQualquer dúvida, estou à disposição. Obrigado! 🙏`;
 }
 function abrirPreviewEnvio(parcelaId,nome,telefones,msg) {
