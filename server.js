@@ -306,7 +306,13 @@ async function enviarLembretesMissionControl() {
       if (pendentes.length) linha += '\n   • ' + pendentes.map(t => t.titulo).join('\n   • ');
       return linha;
     }).join('\n\n');
-    const mensagem = `Bom dia, ${primeiroNome}! \n\nSuas pendencias de hoje no Mission Control:\n\n${linhas}\n\nQualquer coisa, e so chamar. `;
+    const mensagem = `Bom dia, ${primeiroNome}! 
+
+Suas pendências de hoje no Mission Control:
+
+${linhas}
+
+Qualquer coisa, é só chamar. `;
     try {
       await axios.post(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`, { number: telefone, text: mensagem }, { headers: { apikey: EVOLUTION_KEY } });
       console.log(`[MISSION CONTROL] Lembrete enviado para ${nome} (${lista.length} mission(s))`);
@@ -337,6 +343,61 @@ async function arquivarMissionsConcluidasMC() {
     .in('id', ids);
   if (errUpdate) { console.error('[MISSION CONTROL] Erro ao arquivar:', errUpdate.message); return; }
   console.log(`[MISSION CONTROL] ${ids.length} mission(s) arquivada(s): ` + antigas.map(m => m.titulo).join(', '));
+}
+
+// Mission Control: resumo semanal de segunda-feira — pra cada responsavel, manda
+// tudo que precisa da atencao dele pra comecar a semana: atrasadas (qualquer coluna,
+// incluindo backlog), o que esta em "Esta semana" e o que esta "Em andamento".
+// Backlog sem atraso fica de fora — o objetivo e focar no que e urgente ou ja esta rolando.
+async function enviarResumoSemanalMissionControl() {
+  console.log('[MISSION CONTROL] Gerando resumo semanal de segunda-feira...');
+  const { data: dataLocal } = agoraNoFuso(TIMEZONE_PADRAO);
+  const { data: missions, error } = await supabase
+    .from('mission_control_missions')
+    .select('*, clientes(nome), mission_control_team(nome, telefone), mission_control_tasks(titulo, concluida)')
+    .in('status', ['backlog', 'semana', 'andamento']);
+  if (error) { console.error('[MISSION CONTROL] Erro Supabase (resumo semanal):', error.message); return; }
+  if (!missions?.length) { console.log('[MISSION CONTROL] Nada pendente pro resumo semanal.'); return; }
+
+  const porResponsavel = {};
+  for (const m of missions) {
+    const resp = m.mission_control_team;
+    if (!resp || !resp.telefone) continue;
+    const chave = resp.telefone;
+    if (!porResponsavel[chave]) porResponsavel[chave] = { nome: resp.nome, telefone: resp.telefone, missions: [] };
+    porResponsavel[chave].missions.push(m);
+  }
+
+  const formatarMission = (m) => {
+    const cliente = m.clientes?.nome ? ` (${m.clientes.nome})` : '';
+    const pendentes = (m.mission_control_tasks || []).filter(t => !t.concluida);
+    let linha = `• ${m.titulo}${cliente}`;
+    if (pendentes.length) linha += '\n   - ' + pendentes.map(t => t.titulo).join('\n   - ');
+    return linha;
+  };
+
+  for (const chave of Object.keys(porResponsavel)) {
+    const { nome, telefone, missions: lista } = porResponsavel[chave];
+    const primeiroNome = nome.split(' ')[0];
+    const atrasadas = lista.filter(m => m.prazo && m.prazo < dataLocal);
+    const estaSemana = lista.filter(m => m.status === 'semana' && !(m.prazo && m.prazo < dataLocal));
+    const emAndamento = lista.filter(m => m.status === 'andamento' && !(m.prazo && m.prazo < dataLocal));
+
+    const blocos = [];
+    if (atrasadas.length) blocos.push(`🔴 *Atrasadas*\n${atrasadas.map(formatarMission).join('\n')}`);
+    if (estaSemana.length) blocos.push(`📅 *Esta semana*\n${estaSemana.map(formatarMission).join('\n')}`);
+    if (emAndamento.length) blocos.push(`🚀 *Em andamento*\n${emAndamento.map(formatarMission).join('\n')}`);
+    if (!blocos.length) continue;
+
+    const tarefas = blocos.join('\n\n');
+    const mensagem = `Bom dia, ${primeiroNome}!\n\nAqui do Mission Control, temos os seguintes pontos para iniciarmos essa segundona:\n\n${tarefas}\n\nBora de café, música boa e play nas tasks ;)`;
+    try {
+      await axios.post(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`, { number: telefone, text: mensagem }, { headers: { apikey: EVOLUTION_KEY } });
+      console.log(`[MISSION CONTROL] Resumo semanal enviado para ${nome} (${lista.length} mission(s))`);
+    } catch (err) {
+      console.error(`[MISSION CONTROL] Erro ao enviar resumo semanal para ${nome}:`, err.message);
+    }
+  }
 }
 
 // Checagem diaria de entregas do Ground Control — roda as 11h00 (horario de Brasilia),
@@ -490,6 +551,11 @@ cron.schedule('8 11 * * 1-5', async () => {
 // Mission Control: arquivamento automatico, uma vez por dia as 11h30 (horario de Brasilia = 14:30 UTC)
 cron.schedule('30 14 * * *', async () => {
   await arquivarMissionsConcluidasMC();
+});
+
+// Mission Control: resumo semanal, toda segunda-feira as 08:08 (horario de Brasilia = 11:08 UTC)
+cron.schedule('8 11 * * 1', async () => {
+  await enviarResumoSemanalMissionControl();
 });
 
 // Roda tambem ao subir o servidor, pra nao depender de esperar o cron
