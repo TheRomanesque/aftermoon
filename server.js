@@ -435,7 +435,7 @@ async function verificarEntregasGC() {
 }
 
 async function enviarCobrancas() {
-  const hoje = new Date().toISOString().split('T')[0];
+  const { data: hoje } = agoraNoFuso(TIMEZONE_PADRAO);
   console.log(`[COBRANÇAS] Verificando parcelas para ${hoje}...`);
   const { data: parcelas, error } = await supabase
     .from('parcelas')
@@ -448,7 +448,7 @@ async function enviarCobrancas() {
   for (const parcela of parcelas) {
     const cliente = parcela.cobrancas.clientes;
     const cobranca = parcela.cobrancas;
-    const mensagem = `Olá, ${cliente.nome}! 👋\n\nPassando para lembrar que a parcela *${parcela.numero} de ${cobranca.total_parcelas}* do job *${cobranca.job}* vence hoje.\n\n💰 Valor: *R$ ${parcela.valor.toLocaleString('pt-BR', {minimumFractionDigits:2})}*\n\nQualquer dúvida, estou à disposição. Obrigado! 🙏`;
+    const mensagem = `Olá! Passando para lembrar que a parcela:\n\n${parcela.numero} de ${cobranca.total_parcelas} do job ${cobranca.job}, no valor de R$ ${parcela.valor.toLocaleString('pt-BR', {minimumFractionDigits:2})}, tem vencimento hoje, ${hoje.split('-').reverse().join('/')}.\n\nPara facilitar, o pagamento pode ser feito via Pix:\n\nPix (CNPJ): 55.725.877/0001-31\n\nCaso o pagamento já tenha sido realizado, é só desconsiderar esta mensagem.\n\nQualquer dúvida, estamos à disposição.\n\nAftermoon Orbit`;
     try {
       await axios.post(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`, { number: cliente.telefone, text: mensagem }, { headers: { apikey: EVOLUTION_KEY } });
       await supabase.from('parcelas').update({ enviada: true }).eq('id', parcela.id);
