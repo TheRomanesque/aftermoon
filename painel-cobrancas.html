@@ -951,7 +951,7 @@ const toast = (msg,err=false) => {
 };
 const iniciais = n => n.split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();
 const fmtData = s => { const [y,m,d]=s.split('-'); return `${d}/${m}/${y}`; };
-const hoje = () => new Date().toISOString().split('T')[0];
+const hoje = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
 
 // ===== CALENDAR PICKER =====
 let calPickerTarget = null;
@@ -1395,7 +1395,9 @@ function montarTelefones(cli,nomeCliente) {
 }
 function montarMensagemCobranca(nome,job,num,total,valor,dataVenc,atrasada) {
   if(atrasada) return `Olá! Passando para informar que a parcela:\n\n*${num} de ${total}* do job *${job}*, no valor de *${fmtBRL(valor)}*, com vencimento em *${fmtData(dataVenc)}*, está em atraso.\n\nPedimos a gentileza de regularizar o pagamento o quanto antes.\n\nQualquer dúvida ou necessidade de ajuste no prazo, é só nos chamar.\n\nAftermoon Orbit`;
-  return `Olá, ${nome}! 👋\n\nPassando para lembrar que a parcela *${num} de ${total}* do job *${job}* vence em *${fmtData(dataVenc)}*.\n\n💰 Valor: *${fmtBRL(valor)}*\n\nQualquer dúvida, estou à disposição. Obrigado! 🙏`;
+  const hojeStr = hoje();
+  const prazoTexto = dataVenc === hojeStr ? `tem vencimento hoje, ${fmtData(dataVenc)}` : `tem vencimento em ${fmtData(dataVenc)}`;
+  return `Olá! Passando para lembrar que a parcela:\n\n${num} de ${total} do job ${job}, no valor de ${fmtBRL(valor)}, ${prazoTexto}.\n\nPara facilitar, o pagamento pode ser feito via Pix:\n\nPix (CNPJ): 55.725.877/0001-31\n\nCaso o pagamento já tenha sido realizado, é só desconsiderar esta mensagem.\n\nQualquer dúvida, estamos à disposição.\n\nAftermoon Orbit`;
 }
 function abrirPreviewEnvio(parcelaId,nome,telefones,msg) {
   const cor=avatarColor(nome);
