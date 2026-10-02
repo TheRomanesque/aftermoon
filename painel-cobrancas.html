@@ -72,8 +72,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* STATS */
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;transition:border-color .2s}
+.stat-card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;transition:border-color .2s}
 .stat-card:hover{border-color:var(--border2)}
+.stat-eye{position:absolute;top:10px;right:10px;width:15px;height:15px;cursor:pointer;color:var(--muted2);opacity:.55;transition:opacity .15s,color .15s}
+.stat-eye:hover{opacity:1;color:var(--text)}
+.stat-blurred{filter:blur(7px);user-select:none;transition:filter .15s}
 .stat-label{font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
 .stat-value{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;margin-bottom:4px}
 .stat-value.green{color:var(--accent)}.stat-value.orange{color:var(--orange)}.stat-value.yellow{color:var(--yellow)}
@@ -341,22 +344,22 @@ textarea{resize:vertical;min-height:80px}
       <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
         <div class="stat-grid">
-          <div class="stat-card">
+          <div class="stat-card"><span class="stat-eye" id="eye-faturamento" title="Mostrar/ocultar valores"></span>
             <div class="stat-label">Recebido (quitado)<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
             <div class="stat-value green" id="stat-faturamento">R$ 0</div>
             <div class="stat-change" id="stat-aberto">Projetado: R$ 0</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card"><span class="stat-eye" id="eye-clientes" title="Mostrar/ocultar valores"></span>
             <div class="stat-label">Clientes ativos<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
             <div class="stat-value" id="stat-clientes">0</div>
             <div class="stat-change" id="stat-clientes-drive">0 com Drive linkado</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card"><span class="stat-eye" id="eye-projetos" title="Mostrar/ocultar valores"></span>
             <div class="stat-label">Valor total projetos<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
             <div class="stat-value green" id="stat-hoje">R$ 0</div>
             <div class="stat-change" id="stat-hoje-val">soma dos projetos ativos</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card"><span class="stat-eye" id="eye-aberto" title="Mostrar/ocultar valores"></span>
             <div class="stat-label">Valor em aberto<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
             <div class="stat-value orange" id="stat-valor-aberto">R$ 0</div>
             <div class="stat-change" id="stat-vencidas-count">0 vencidas</div>
@@ -2857,6 +2860,15 @@ window.removerMembroEquipeMC = async function(id) {
 };
 
 window.addEventListener('resize',()=>{if(document.getElementById('page-dashboard').classList.contains('active'))carregarDashboard();});
+
+const STAT_CARDS=[{key:'faturamento',valueId:'stat-faturamento',changeId:'stat-aberto'},{key:'clientes',valueId:'stat-clientes',changeId:'stat-clientes-drive'},{key:'projetos',valueId:'stat-hoje',changeId:'stat-hoje-val'},{key:'aberto',valueId:'stat-valor-aberto',changeId:'stat-vencidas-count'}];
+const EYE_OPEN_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+function statVisible(key){return sessionStorage.getItem('orbit_stat_visible_'+key)==='1';}
+function setStatVisible(key,v){sessionStorage.setItem('orbit_stat_visible_'+key, v?'1':'0');}
+function applyStatVisibility(card){const visible=statVisible(card.key);const valueEl=document.getElementById(card.valueId);const changeEl=document.getElementById(card.changeId);const eyeEl=document.getElementById('eye-'+card.key);if(valueEl)valueEl.classList.toggle('stat-blurred',!visible);if(changeEl)changeEl.classList.toggle('stat-blurred',!visible);if(eyeEl){eyeEl.innerHTML=visible?EYE_OPEN_SVG:EYE_OFF_SVG;eyeEl.title=visible?'Ocultar valores':'Mostrar valores';}}
+function initStatVisibility(){STAT_CARDS.forEach(function(card){applyStatVisibility(card);var eyeEl=document.getElementById('eye-'+card.key);if(eyeEl){eyeEl.addEventListener('click',function(e){e.stopPropagation();setStatVisible(card.key,!statVisible(card.key));applyStatVisibility(card);});}});}
+initStatVisibility();
 </script>
 </body>
 </html>
